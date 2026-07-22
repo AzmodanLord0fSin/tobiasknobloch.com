@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    @font-face {
+      font-family: "W95FA";
+      src: url("assets/fonts/w95fa-regular-webfont.woff2") format("woff2"),
+           url("assets/fonts/w95fa-regular-webfont.woff") format("woff");
+    }
+    @font-face {
+      font-family: "Fira Code";
+      src: url("assets/fonts/FiraCode-Regular.woff2") format("woff2"),
+           url("assets/fonts/FiraCode-Regular.woff") format("woff");
+    }
+    :root {
+      --font: "W95FA", monospace;
+      --bg: hsl(180, 100%, 25%);
+      --win: hsl(0,0%,78%);
+      --taskbar: hsl(0,0%,78%);
+      --bar-active: hsl(242,100%,24%);
+      --bar-inactive: hsl(0,0%,50%);
+      --border-out: hsl(0,0%,98%) hsl(0,0%,20%) hsl(0,0%,20%) hsl(0,0%,98%);
+      --border-in:  hsl(0,0%,60%) hsl(0,0%,98%) hsl(0,0%,98%) hsl(0,0%,60%);
+      --content-bg: #d4d0c8;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body { font-family: var(--font); font-size: 13px; background: var(--bg); user-select: none; }
+
+    /* ── DESKTOP ── */
+    #desktop { position: absolute; inset: 0 0 42px 0; overflow: hidden; }
+
+    /* ── ICONS ── */
+    .icon {
+      position: absolute; width: 76px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 6px 4px; cursor: default;
+      border: 1px solid transparent;
+    }
+    .icon:hover  { border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.1); }
+    .icon.sel    { border-color: rgba(255,255,255,.6); background: rgba(0,0,128,.4); }
+    .icon-img    { font-size: 34px; width: 48px; height: 48px; display:flex; align-items:center; justify-content:center; }
+    .icon-label  { color:#fff; font-size:11px; text-align:center; text-shadow:1px 1px 2px rgba(0,0,0,.9); line-height:1.3; word-break:break-word; }
+    .icon.sel .icon-label { background:#000080; }
+
+    /* ── WINDOW BASE ── */
+    .win {
+      position: absolute;
+      min-width: 240px; min-height: 160px;
+      background: var(--win);
+      border: 2px solid; border-color: var(--border-out);
+      display: flex; flex-direction: column;
+      box-shadow: 2px 2px 0 rgba(0,0,0,.35);
+    }
+    .win.inactive .titlebar { background: var(--bar-inactive); }
+    .win.hidden { display: none; }
+
+    /* Titlebar */
+    .titlebar {
+      background: var(--bar-active);
+      height: 28px; min-height: 28px;
+      display: flex; align-items: center; padding: 0 4px; gap: 5px;
+      cursor: move; flex-shrink: 0;
+    }
+    .t-icon  { font-size: 14px; flex-shrink: 0; }
+    .t-title { color: #fff; font-size: 12px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t-btns  { display: flex; gap: 2px; flex-shrink: 0; }
+    .tbtn {
+      width: 20px; height: 20px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      font-size: 11px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #000; font-family: var(--font); line-height: 1;
+    }
+    .tbtn:active { border-color: var(--border-in); }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--win); border-bottom: 2px solid; border-color: var(--border-in);
+      padding: 3px 6px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .tool-btn {
+      font-family: var(--font); font-size: 11px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      padding: 1px 8px; cursor: pointer; color: #000;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .tool-btn:active { border-color: var(--border-in); }
+    .tool-sep { width: 4px; height: 20px; border-left: 2px solid; border-color: var(--border-in); border-right: 1px solid #fff; flex-shrink:0; }
+    .feed-pills { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
+    .pill {
+      font-size: 10px; padding: 1px 7px;
+      border: 1px solid #666; cursor: pointer; background: #c0c0c0; color: #222;
+    }
+    .pill.active { background: var(--bar-active); color: #fff; border-color: var(--bar-active); }
+
+    /* Body */
+    .win-body {
+      flex: 1; overflow: hidden;
+      border: 2px solid; border-color: var(--border-in);
+      margin: 2px; display: flex; flex-direction: column;
+      background: var(--content-bg);
+    }
+
+    /* Feed list */
+    .feed-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .feed-item {
+      padding: 6px 10px; border-bottom: 1px solid #b0aca4;
+      cursor: pointer; user-select: text;
+    }
+    .feed-item:hover { background: rgba(0,0,128,.08); }
+    .feed-item-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+    .feed-src  {
+      font-size: 10px; padding: 1px 5px;
+      color: #fff; flex-shrink: 0;
+      font-family: var(--font);
+    }
+    .feed-title { font-size: 12px; color: #000080; line-height: 1.35; flex: 1; }
+    .feed-title:hover { text-decoration: underline; }
+    .feed-desc { font-size: 11px; color: #444; line-height: 1.4; margin-bottom: 3px; font-family: "Fira Code", monospace; }
+    .feed-date { font-size: 10px; color: #777; }
+
+    /* States */
+    .feed-loading, .feed-error, .feed-empty {
+      padding: 20px; text-align: center; color: #666; font-size: 12px;
+    }
+    .feed-error { color: #990000; }
+    .spinner { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Statusbar */
+    .statusbar {
+      height: 22px; background: var(--win);
+      border-top: 2px solid; border-color: var(--border-in);
+      display: flex; align-items: center; padding: 0 4px; gap: 4px; flex-shrink: 0;
+    }
+    .status-pane {
+      border: 2px solid; border-color: var(--border-in);
+      padding: 0 6px; font-size: 11px; height: 18px;
+      display: flex; align-items: center; white-space: nowrap;
+    }
+
+    /* Resize */
+    .rh {
+      position: absolute; right: 0; bottom: 0; width: 16px; height: 16px;
+      cursor: se-resize;
+      background: linear-gradient(135deg,
+        transparent 35%, #666 35%, #666 40%, transparent 40%,
+        transparent 50%, #666 50%, #666 55%, transparent 55%,
+        transparent 65%, #666 65%, #666 70%, transparent 70%
+      );
+    }
+
+    /* ── IE5 BROWSER ── */
+    .ie-titlebar {
+      background: linear-gradient(90deg, #00007a 0%, #1080c8 60%, #56aee8 100%);
+    }
+    .ie-logo {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 20px; font-weight: bold; font-style: italic;
+      color: #fff; margin-left: auto; margin-right: 6px;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      text-shadow: 1px 1px 3px rgba(0,0,128,.8);
+      flex-shrink: 0;
+    }
+    .ie-logo.spin { animation: ie-flip .7s linear infinite; }
+    @keyframes ie-flip {
+      0%   { transform: rotateY(0deg);    color: #fff; }
+      50%  { transform: rotateY(180deg);  color: #88ccff; }
+      100% { transform: rotateY(360deg);  color: #fff; }
+    }
+    .ie-menubar {
+      display: flex; background: var(--win);
+      border-bottom: 1px solid #888; padding: 2px 6px; flex-shrink: 0;
+    }
+    .ie-menubar span {
+      padding: 2px 8px; font-size: 12px; cursor: default;
+    }
+    .ie-menubar span:hover { background: #000080; color: #fff; }
+    .ie-toolbar {
+      display: flex; align-items: center; background: var(--win);
+      border-bottom: 2px solid; border-color: var(--border-in);
+      padding: 2px 4px; gap: 0; flex-shrink: 0;
+    }
+    .ie-btn {
+      display: flex; flex-direction: column; align-items: center;
+      background: transparent; border: 2px solid transparent;
+      padding: 2px 8px; font-family: var(--font); cursor: pointer;
+      min-width: 48px; color: #000;
+    }
+    .ie-btn:hover:not(:disabled) { border-color: var(--border-out); background: var(--win); }
+    .ie-btn:active:not(:disabled) { border-color: var(--border-in); }
+    .ie-btn:disabled { opacity: .4; cursor: default; }
+    .ie-btn-ico { font-size: 18px; line-height: 1.2; }
+    .ie-btn-lbl { font-size: 10px; margin-top: 1px; white-space: nowrap; }
+    .ie-tsep { width: 2px; height: 38px; margin: 0 4px; flex-shrink: 0;
+               border-left: 1px solid #888; border-right: 1px solid #fff; }
+    .ie-addrbar {
+      display: flex; align-items: center; background: var(--win);
+      border-bottom: 2px solid; border-color: var(--border-in);
+      padding: 3px 6px; gap: 5px; flex-shrink: 0;
+    }
+    .ie-addr-lbl { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+    .ie-addr-input {
+      flex: 1; height: 22px; padding: 0 4px;
+      border: 2px solid; border-color: var(--border-in);
+      font-family: "Fira Code", monospace; font-size: 11px; background: #fff;
+      outline: none;
+    }
+    .ie-go {
+      font-family: var(--font); font-size: 11px; white-space: nowrap;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      padding: 1px 10px; cursor: pointer;
+    }
+    .ie-go:active { border-color: var(--border-in); }
+    /* Reader-Theme-Variablen auf ie-body → Loading, Fehlerseite UND Reader erben sie.
+       Default: Everforest Hell · .ef-dark auf ie-body schaltet alles auf Dunkel um. */
+    .ie-body {
+      flex: 1; position: relative; overflow: hidden;
+      --rd-bg:#fdf6e3; --rd-bg2:#f4f0d9; --rd-border:#e6e2cc; --rd-fg:#5c6a72;
+      --rd-muted:#939f91; --rd-link:#3a94c5; --rd-visited:#df69ba; --rd-accent:#8da101;
+      --rd-warn:#dfa000;
+      background: var(--rd-bg);
+    }
+    .ie-body.ef-dark {
+      --rd-bg:#2d353b; --rd-bg2:#3d484d; --rd-border:#475258; --rd-fg:#d3c6aa;
+      --rd-muted:#859289; --rd-link:#7fbbb3; --rd-visited:#d699b6; --rd-accent:#a7c080;
+      --rd-warn:#dbbc7f;
+    }
+
+    /* Reader content — Schrift: Arial · Themes: Everforest Hell (Default) / Dunkel */
+    .ie-reader {
+      position: absolute; inset: 0;
+      overflow-y: auto; overflow-x: hidden; padding: 20px 28px;
+      overflow-wrap: break-word;
+      background: var(--rd-bg); color: var(--rd-fg);
+      font-family: Arial, "Helvetica Neue", "Segoe UI", sans-serif;
+      font-size: 14px; line-height: 1.65;
+    }
+    /* Fremd-Content darf nie breiter als das Fenster werden */
+    .ie-reader * { max-width: 100% !important; }
+    .ie-reader img, .ie-reader video, .ie-reader svg { height: auto !important; }
+    .ie-reader table { display: block; overflow-x: auto; border-collapse: collapse; }
+    .ie-reader td, .ie-reader th { border: 1px solid var(--rd-border); padding: 4px 8px; }
+    .ie-reader h1 { font-size: 21px; font-weight: bold; margin: 0 0 10px; line-height: 1.3; }
+    .ie-reader h2 { font-size: 17px; margin: 16px 0 8px; }
+    .ie-reader h3 { font-size: 15px; margin: 12px 0 6px; }
+    .ie-reader p  { margin: 9px 0; }
+    .ie-reader a  { color: var(--rd-link); text-decoration: underline; cursor: pointer; }
+    .ie-reader a:visited { color: var(--rd-visited); }
+    .ie-reader img { display: block; margin: 10px 0; }
+    .ie-reader figure { margin: 10px 0; }
+    .ie-reader figcaption { font-size: 12px; color: var(--rd-muted); }
+    .ie-reader blockquote { border-left: 4px solid var(--rd-accent); margin: 10px 0 10px 4px; padding-left: 12px; color: var(--rd-muted); }
+    .ie-reader ul, .ie-reader ol { margin: 8px 0 8px 24px; }
+    .ie-reader li { margin: 3px 0; }
+    .ie-reader pre, .ie-reader code { font-family: "Courier New", monospace; font-size: 13px; background: var(--rd-bg2); }
+    .ie-reader code { padding: 1px 4px; }
+    .ie-reader pre { padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
+    .ie-reader hr { border: none; border-top: 1px solid var(--rd-border); margin: 16px 0; }
+    .ie-reader br + br { display: none; }
+    .ie-reader-meta { font-size: 12px; color: var(--rd-muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--rd-border); font-family: Arial, sans-serif; }
+    .ie-reader-src { font-size: 11px; color: var(--rd-muted); margin-bottom: 16px; font-family: Arial, sans-serif; word-break: break-all; }
+    /* Boxen für JS-injizierte Inhalte (Teaser, Hinweise) — folgen dem Reader-Theme */
+    .rd-teaser  { margin: 0 0 18px; padding: 12px; background: var(--rd-bg2); border: 1px solid var(--rd-border); font-size: 13px; line-height: 1.6; }
+    .rd-note    { margin: 16px 0; padding: 14px; background: var(--rd-bg2); border: 2px solid var(--rd-warn); font-size: 13px; }
+    .rd-warnbox { margin: 10px 0 14px; padding: 10px; background: var(--rd-bg2); border: 1px solid var(--rd-warn); font-size: 12px; color: var(--rd-muted); }
+
+    /* ── ANZEIGE-EIGENSCHAFTEN (W95-Dialog) ── */
+    .prop-body { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+    .prop-prev { border: 2px solid; border-color: var(--border-in); height: 150px; position: relative; overflow: hidden; flex-shrink: 0; }
+    .pp-win  { position: absolute; border: 2px solid; border-color: var(--border-out); }
+    .pp-bar  { height: 16px; color: #fff; font-size: 10px; padding: 1px 5px; font-family: var(--font); white-space: nowrap; overflow: hidden; }
+    .pp-task { position: absolute; bottom: 0; left: 0; right: 0; height: 14px; border-top: 2px solid #fff; }
+    .prop-row { display: flex; align-items: center; gap: 8px; }
+    .prop-row label { font-size: 12px; width: 62px; flex-shrink: 0; }
+    .prop-select {
+      flex: 1; font-family: var(--font); font-size: 12px; height: 24px;
+      background: #fff; border: 2px solid; border-color: var(--border-in); outline: none;
+    }
+    .prop-color { width: 52px; height: 24px; padding: 0; border: 2px solid; border-color: var(--border-in); background: #fff; cursor: pointer; flex-shrink: 0; }
+    .prop-btns { display: flex; justify-content: flex-end; gap: 6px; margin-top: auto; }
+    .prop-btn {
+      min-width: 78px; padding: 4px 10px; font-family: var(--font); font-size: 12px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out); cursor: pointer;
+    }
+    .prop-btn:active { border-color: var(--border-in); }
+
+    /* Loading state — folgt dem Reader-Theme */
+    .ie-loading {
+      position: absolute; inset: 0; background: var(--rd-bg);
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; color: var(--rd-muted);
+      font-family: var(--font); font-size: 13px;
+    }
+    .ie-loading-bar {
+      width: 200px; height: 16px;
+      border: 2px solid var(--rd-border); background: var(--rd-bg2);
+      position: relative; overflow: hidden;
+    }
+    .ie-loading-bar::after {
+      content: '';
+      position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+      background: var(--rd-accent);
+      animation: ie-prog 1.2s ease-in-out infinite;
+    }
+    @keyframes ie-prog { to { left: 100%; } }
+
+    /* Error page — folgt dem Reader-Theme */
+    .ie-blocked {
+      position: absolute; inset: 0; background: var(--rd-bg);
+      display: none; align-items: center; justify-content: center; z-index: 5;
+    }
+    .ie-err-box { text-align: center; max-width: 480px; padding: 30px; }
+    .ie-err-box h2 { font-size: 18px; color: var(--rd-fg); margin: 12px 0 8px; font-weight: bold; font-family: Arial, sans-serif; }
+    .ie-err-box p  { font-size: 13px; color: var(--rd-muted); line-height: 1.6; margin-bottom: 10px; font-family: Arial, sans-serif; }
+    .ie-err-box hr { border: none; border-top: 2px solid var(--rd-border); margin: 14px 0; }
+    .ie-err-btn {
+      font-family: var(--font); font-size: 12px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      padding: 5px 18px; cursor: pointer; margin: 4px;
+    }
+    .ie-err-btn:active { border-color: var(--border-in); }
+    .ie-err-btn-primary {
+      font-family: var(--font); font-size: 13px; font-weight: bold;
+      background: #000080; color: #fff;
+      border: 2px solid; border-color: var(--border-out);
+      padding: 7px 22px; cursor: pointer; margin: 6px 4px;
+    }
+    .ie-err-btn-primary:active { border-color: var(--border-in); }
+    .ie-statusbar {
+      height: 22px; background: var(--win);
+      border-top: 2px solid; border-color: var(--border-in);
+      display: flex; align-items: center; padding: 0 4px; gap: 4px; flex-shrink: 0;
+    }
+    .ie-status-txt { flex: 1; font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ie-zone {
+      border: 2px solid; border-color: var(--border-in);
+      padding: 0 8px; height: 18px; display: flex; align-items: center;
+      font-size: 11px; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── TASKBAR ── */
+    #taskbar {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 42px;
+      background: var(--taskbar); border-top: 2px solid; border-color: var(--border-out);
+      display: flex; align-items: center; padding: 0 4px; gap: 4px; z-index: 99999;
+    }
+    #start-btn {
+      height: calc(100% - 6px); padding: 0 12px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font); font-size: 14px; font-weight: bold;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    #start-btn.on { border-color: var(--border-in); }
+    #start-ico { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; width: 20px; height: 20px; }
+    #start-ico span:nth-child(1){background:#f00}
+    #start-ico span:nth-child(2){background:#0a0}
+    #start-ico span:nth-child(3){background:#00f}
+    #start-ico span:nth-child(4){background:#fa0}
+    .tb-sep { width: 4px; height: 32px; border-left: 2px solid #888; border-right: 1px solid #fff; flex-shrink: 0; }
+    #tb-wins { display: flex; gap: 3px; flex: 1; overflow: hidden; min-width: 0; }
+    .tb-btn {
+      height: calc(100% - 6px); min-width: 110px; max-width: 160px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      display: flex; align-items: center; gap: 5px; padding: 0 8px;
+      font-family: var(--font); font-size: 12px;
+      cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
+    }
+    .tb-btn.on { border-color: var(--border-in); background: #bbb; }
+    #tray {
+      border: 2px solid; border-color: var(--border-in);
+      height: calc(100% - 6px); padding: 0 10px;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    #clock { font-family: var(--font); font-size: 12px; }
+    #refresh-countdown { font-family: var(--font); font-size: 11px; color: #adf; margin-right: 6px; cursor: default; white-space: nowrap; }
+    #refresh-countdown.loading { color: #ffa; }
+
+    /* ── START MENU ── */
+    #smenu {
+      position: fixed; bottom: 42px; left: 0; width: 230px;
+      background: var(--win); border: 2px solid; border-color: var(--border-out);
+      box-shadow: 4px -2px 8px rgba(0,0,0,.4);
+      display: none; flex-direction: row; z-index: 999999;
+    }
+    #smenu.on { display: flex; }
+    #smenu-bar {
+      width: 28px; background: var(--bar-active);
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-bottom: 6px; font-size: 13px; color: rgba(255,255,255,.7);
+      flex-shrink: 0;
+    }
+    #smenu-list { flex: 1; padding: 4px 0; }
+    .smi {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px; font-size: 13px; cursor: pointer;
+    }
+    .smi:hover { background: var(--bar-active); color: #fff; }
+    .smi-ico { font-size: 20px; width: 26px; text-align: center; flex-shrink: 0; }
+    .sm-sep { height: 2px; margin: 3px 8px; background: #666; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+
+<div id="desktop">
+
+  <!-- ── DESKTOP ICONS ── -->
+  <div class="icon" style="left:14px;top:14px"  data-wid="w-ki"       ondblclick="openWin('w-ki')"       onclick="selIcon(this)"><div class="icon-img">🤖</div><div class="icon-label">KI & LLMs</div></div>
+  <div class="icon" style="left:14px;top:108px" data-wid="w-sec"      ondblclick="openWin('w-sec')"      onclick="selIcon(this)"><div class="icon-img">🔒</div><div class="icon-label">Security &amp; OSINT</div></div>
+  <div class="icon" style="left:14px;top:202px" data-wid="w-dark"     ondblclick="openWin('w-dark')"     onclick="selIcon(this)"><div class="icon-img">🕵️</div><div class="icon-label">Darknet OSINT</div></div>
+  <div class="icon" style="left:14px;top:296px" data-wid="w-btc"      ondblclick="openWin('w-btc')"      onclick="selIcon(this)"><div class="icon-img">₿</div><div class="icon-label">Bitcoin &amp; Crypto</div></div>
+  <div class="icon" style="left:14px;top:390px" data-wid="w-trade"    ondblclick="openWin('w-trade')"    onclick="selIcon(this)"><div class="icon-img">📈</div><div class="icon-label">Trading &amp; Finance</div></div>
+  <div class="icon" style="left:14px;top:484px" data-wid="w-tech"     ondblclick="openWin('w-tech')"     onclick="selIcon(this)"><div class="icon-img">⚙️</div><div class="icon-label">Tech &amp; Automation</div></div>
+  <div class="icon" style="left:14px;top:578px" data-wid="w-fav"      ondblclick="openWin('w-fav')"      onclick="selIcon(this)"><div class="icon-img">⭐</div><div class="icon-label">Favoriten</div></div>
+  <div class="icon" style="left:108px;top:14px" data-wid="w-intel"    ondblclick="openWin('w-intel')"    onclick="selIcon(this)"><div class="icon-img">🕸️</div><div class="icon-label">Deep Intel</div></div>
+
+  <!-- ── WINDOWS (hidden until opened) ── -->
+
+  <!-- KI & LLMs -->
+  <div class="win hidden inactive" id="w-ki" style="left:120px;top:30px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-ki')">
+      <span class="t-icon">🤖</span>
+      <span class="t-title">KI & LLMs – News Feed</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-ki')">_</div>
+        <div class="tbtn" onclick="maxWin('w-ki')">□</div>
+        <div class="tbtn" onclick="closeWin('w-ki')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-ki')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-ki"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-ki"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-ki">Bereit</div>
+      <div class="status-pane" id="stat-time-w-ki">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-ki')"></div>
+  </div>
+
+  <!-- Security & OSINT -->
+  <div class="win hidden inactive" id="w-sec" style="left:180px;top:50px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-sec')">
+      <span class="t-icon">🔒</span>
+      <span class="t-title">Security & OSINT – News Feed</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-sec')">_</div>
+        <div class="tbtn" onclick="maxWin('w-sec')">□</div>
+        <div class="tbtn" onclick="closeWin('w-sec')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-sec')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-sec"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-sec"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-sec">Bereit</div>
+      <div class="status-pane" id="stat-time-w-sec">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-sec')"></div>
+  </div>
+
+  <!-- Darknet OSINT -->
+  <div class="win hidden inactive" id="w-dark" style="left:240px;top:70px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-dark')">
+      <span class="t-icon">🕵️</span>
+      <span class="t-title">Darknet OSINT – Tools & Methoden</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-dark')">_</div>
+        <div class="tbtn" onclick="maxWin('w-dark')">□</div>
+        <div class="tbtn" onclick="closeWin('w-dark')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-dark')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-dark"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-dark"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-dark">Bereit</div>
+      <div class="status-pane" id="stat-time-w-dark">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-dark')"></div>
+  </div>
+
+  <!-- Deep Intel -->
+  <div class="win hidden inactive" id="w-intel" style="left:260px;top:50px;width:560px;height:540px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-intel')">
+      <span class="t-icon">🕸️</span>
+      <span class="t-title">Deep Intel – Breach &amp; Threat Monitor</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-intel')">_</div>
+        <div class="tbtn" onclick="maxWin('w-intel')">□</div>
+        <div class="tbtn" onclick="closeWin('w-intel')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-intel')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-intel"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-intel"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-intel">Bereit</div>
+      <div class="status-pane" id="stat-time-w-intel">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-intel')"></div>
+  </div>
+
+  <!-- Bitcoin & Crypto -->
+  <div class="win hidden inactive" id="w-btc" style="left:300px;top:40px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-btc')">
+      <span class="t-icon">₿</span>
+      <span class="t-title">Bitcoin & Crypto – News Feed</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-btc')">_</div>
+        <div class="tbtn" onclick="maxWin('w-btc')">□</div>
+        <div class="tbtn" onclick="closeWin('w-btc')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-btc')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-btc"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-btc"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-btc">Bereit</div>
+      <div class="status-pane" id="stat-time-w-btc">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-btc')"></div>
+  </div>
+
+  <!-- Trading & Finance -->
+  <div class="win hidden inactive" id="w-trade" style="left:360px;top:60px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-trade')">
+      <span class="t-icon">📈</span>
+      <span class="t-title">Trading & Finance – News Feed</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-trade')">_</div>
+        <div class="tbtn" onclick="maxWin('w-trade')">□</div>
+        <div class="tbtn" onclick="closeWin('w-trade')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-trade')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-trade"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-trade"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-trade">Bereit</div>
+      <div class="status-pane" id="stat-time-w-trade">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-trade')"></div>
+  </div>
+
+  <!-- Tech & Automation -->
+  <div class="win hidden inactive" id="w-tech" style="left:420px;top:40px;width:520px;height:520px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-tech')">
+      <span class="t-icon">⚙️</span>
+      <span class="t-title">Tech & Automation – News Feed</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-tech')">_</div>
+        <div class="tbtn" onclick="maxWin('w-tech')">□</div>
+        <div class="tbtn" onclick="closeWin('w-tech')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn" onclick="refreshWin('w-tech')">↻ Aktualisieren</button>
+      <div class="tool-sep"></div>
+      <div class="feed-pills" id="pills-w-tech"></div>
+    </div>
+    <div class="win-body">
+      <div class="feed-list" id="feed-w-tech"><div class="feed-loading"><span class="spinner">⟳</span> Lade...</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="stat-w-tech">Bereit</div>
+      <div class="status-pane" id="stat-time-w-tech">–</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-tech')"></div>
+  </div>
+
+
+  <!-- ── FAVORITEN ── -->
+  <div class="win hidden inactive" id="w-fav" style="left:140px;top:40px;width:680px;height:540px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-fav')">
+      <span class="t-icon">⭐</span>
+      <span class="t-title">Favoriten – Lesezeichen</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-fav')">_</div>
+        <div class="tbtn" onclick="maxWin('w-fav')">□</div>
+        <div class="tbtn" onclick="closeWin('w-fav')">✕</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="feed-pills" id="fav-pills"></div>
+    </div>
+    <div class="win-body">
+      <div class="win-content" style="padding:0;overflow:auto;" id="fav-content"></div>
+    </div>
+    <div class="statusbar">
+      <div class="status-pane" id="fav-stat">Lesezeichen aus favorites_13.06.26.html</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-fav')"></div>
+  </div>
+
+  <!-- ── IE5 BROWSER WINDOW ── -->
+  <div class="win hidden inactive" id="w-ie" style="left:160px;top:60px;width:720px;height:560px;">
+    <div class="titlebar ie-titlebar" onmousedown="dragStart(event,'w-ie')">
+      <span class="t-icon">🌐</span>
+      <span class="t-title" id="ie-wintitle">Microsoft Internet Explorer</span>
+      <div class="ie-logo" id="ie-logo">e</div>
+      <div class="t-btns">
+        <div class="tbtn" onclick="minWin('w-ie')">_</div>
+        <div class="tbtn" onclick="maxWin('w-ie')">□</div>
+        <div class="tbtn" onclick="closeWin('w-ie')">✕</div>
+      </div>
+    </div>
+    <div class="ie-menubar">
+      <span>Datei</span><span>Bearbeiten</span><span>Ansicht</span>
+      <span>Favoriten</span><span>Extras</span><span>?</span>
+    </div>
+    <div class="ie-toolbar">
+      <button class="ie-btn" id="ie-back-btn" onclick="ieBack()" disabled>
+        <div class="ie-btn-ico">◀</div><div class="ie-btn-lbl">Zurück</div>
+      </button>
+      <button class="ie-btn" id="ie-fwd-btn" onclick="ieFwd()" disabled>
+        <div class="ie-btn-ico">▶</div><div class="ie-btn-lbl">Vorwärts</div>
+      </button>
+      <button class="ie-btn" onclick="ieStop()">
+        <div class="ie-btn-ico">✕</div><div class="ie-btn-lbl">Stop</div>
+      </button>
+      <button class="ie-btn" onclick="ieRefresh()">
+        <div class="ie-btn-ico">↻</div><div class="ie-btn-lbl">Aktualisieren</div>
+      </button>
+      <button class="ie-btn" onclick="ieHome()">
+        <div class="ie-btn-ico">🏠</div><div class="ie-btn-lbl">Startseite</div>
+      </button>
+      <div class="ie-tsep"></div>
+      <button class="ie-btn" onclick="ieSearch()">
+        <div class="ie-btn-ico">🔍</div><div class="ie-btn-lbl">Suchen</div>
+      </button>
+      <button class="ie-btn">
+        <div class="ie-btn-ico">⭐</div><div class="ie-btn-lbl">Favoriten</div>
+      </button>
+      <div class="ie-tsep"></div>
+      <button class="ie-btn" id="ie-theme-btn" onclick="ieToggleTheme()" title="Reader-Theme: Everforest Hell/Dunkel">
+        <div class="ie-btn-ico">🌙</div><div class="ie-btn-lbl">Theme</div>
+      </button>
+    </div>
+    <div class="ie-addrbar">
+      <span class="ie-addr-lbl">Adresse</span>
+      <input class="ie-addr-input" id="ie-addr" type="text" value="about:blank"
+             onkeydown="if(event.key==='Enter') ieNavigate(this.value)">
+      <button class="ie-go" onclick="ieNavigate(document.getElementById('ie-addr').value)">Wechseln zu ▶</button>
+    </div>
+    <div class="ie-body" id="ie-body">
+      <div class="ie-loading" id="ie-loading">
+        <div>Verbindung wird hergestellt...</div>
+        <div class="ie-loading-bar"></div>
+      </div>
+      <div class="ie-reader" id="ie-reader"></div>
+      <div class="ie-blocked" id="ie-blocked">
+        <div class="ie-err-box">
+          <div style="font-size:52px">⚠️</div>
+          <h2>Diese Seite kann nicht angezeigt werden</h2>
+          <hr>
+          <p id="ie-err-detail">Der Inhalt konnte nicht abgerufen werden.</p>
+          <p style="font-size:11px;color:#888;max-width:380px;margin:0 auto 10px">
+            Viele Seiten blockieren öffentliche Proxy-Dienste mit Bot-Schutz (Cloudflare, WAF).
+            Das ist normal — öffne die Seite direkt im Browser.
+          </p>
+          <hr>
+          <button class="ie-err-btn-primary" onclick="window.open(document.getElementById('ie-addr').value,'_blank')">
+            🌐 Im Browser öffnen
+          </button>
+          <br>
+          <button class="ie-err-btn" onclick="ieRetry()">↻ Erneut versuchen</button>
+        </div>
+      </div>
+    </div>
+    <div class="ie-statusbar">
+      <div class="ie-status-txt" id="ie-status">Bereit</div>
+      <div class="ie-zone">🔒 Internet</div>
+    </div>
+    <div class="rh" onmousedown="resizeStart(event,'w-ie')"></div>
+  </div>
+
+  <!-- Eigenschaften von Anzeige -->
+  <div class="win hidden inactive" id="w-props" style="left:280px;top:90px;width:400px;height:430px;">
+    <div class="titlebar" onmousedown="dragStart(event,'w-props')">
+      <span class="t-icon">🖥️</span>
+      <span class="t-title">Eigenschaften von Anzeige</span>
+      <div class="t-btns">
+        <div class="tbtn" onclick="closeWin('w-props')">✕</div>
+      </div>
+    </div>
+    <div class="prop-body">
+      <div class="prop-prev" id="pp-desk">
+        <div class="pp-win" id="pp-w1" style="left:16px;top:12px;width:62%;height:76px">
+          <div class="pp-bar" id="pp-bar-i">Inaktives Fenster</div>
+        </div>
+        <div class="pp-win" id="pp-w2" style="left:52px;top:42px;width:62%;height:80px">
+          <div class="pp-bar" id="pp-bar-a">Aktives Fenster</div>
+        </div>
+        <div class="pp-task" id="pp-task"></div>
+      </div>
+      <div class="prop-row">
+        <label for="prop-scheme">Schema:</label>
+        <select class="prop-select" id="prop-scheme" onchange="propSchemeChanged(this.value)">
+          <option value="standard">Windows Standard</option>
+          <option value="efdark">Everforest Dunkel</option>
+          <option value="eflight">Everforest Hell</option>
+          <option value="custom" disabled hidden>(Benutzerdefiniert)</option>
+        </select>
+      </div>
+      <div class="prop-row">
+        <label for="prop-elem">Element:</label>
+        <select class="prop-select" id="prop-elem" onchange="propElemChanged()">
+          <option value="bg">Desktop-Hintergrund</option>
+          <option value="win">Fenster &amp; Schaltflächen</option>
+          <option value="barActive">Titelleiste (aktiv)</option>
+          <option value="barInactive">Titelleiste (inaktiv)</option>
+          <option value="taskbar">Taskbar</option>
+        </select>
+        <input type="color" class="prop-color" id="prop-color" oninput="propColorChanged(this.value)">
+      </div>
+      <div class="prop-btns">
+        <button class="prop-btn" onclick="propOk()">OK</button>
+        <button class="prop-btn" onclick="closeWin('w-props')">Abbrechen</button>
+        <button class="prop-btn" onclick="propApply()">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /desktop -->
+
+<!-- ── TASKBAR ── -->
+<div id="taskbar">
+  <div id="start-btn" onclick="toggleSmenu()">
+    <div id="start-ico"><span></span><span></span><span></span><span></span></div>
+    Start
+  </div>
+  <div class="tb-sep"></div>
+  <div id="tb-wins"></div>
+  <div id="tray"><div id="refresh-countdown" title="Nächste Auto-Aktualisierung aller Feeds">↺ 30:00</div><div id="clock">00:00</div></div>
+</div>
+
+<!-- ── START MENU ── -->
+<div id="smenu">
+  <div id="smenu-bar">Dashboard</div>
+  <div id="smenu-list">
+    <div class="smi" onclick="openWin('w-ki');closeSmenu()">    <span class="smi-ico">🤖</span> KI &amp; LLMs</div>
+    <div class="smi" onclick="openWin('w-sec');closeSmenu()">   <span class="smi-ico">🔒</span> Security &amp; OSINT</div>
+    <div class="smi" onclick="openWin('w-dark');closeSmenu()">  <span class="smi-ico">🕵️</span> Darknet OSINT</div>
+    <div class="smi" onclick="openWin('w-intel');closeSmenu()"> <span class="smi-ico">🕸️</span> Deep Intel</div>
+    <div class="sm-sep"></div>
+    <div class="smi" onclick="openWin('w-btc');closeSmenu()">   <span class="smi-ico">₿</span> Bitcoin &amp; Crypto</div>
+    <div class="smi" onclick="openWin('w-trade');closeSmenu()"> <span class="smi-ico">📈</span> Trading &amp; Finance</div>
+    <div class="sm-sep"></div>
+    <div class="smi" onclick="openWin('w-tech');closeSmenu()">  <span class="smi-ico">⚙️</span> Tech &amp; Automation</div>
+    <div class="sm-sep"></div>
+    <div class="smi" onclick="openWin('w-fav');closeSmenu()">   <span class="smi-ico">⭐</span> Favoriten</div>
+    <div class="sm-sep"></div>
+    <div class="smi" onclick="openProps();closeSmenu()">        <span class="smi-ico">🖥️</span> Einstellungen: Anzeige</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// FEED CONFIG
+// ═══════════════════════════════════════════════
+const CATS = {
+  'w-ki': {
+    label: 'KI & LLMs',
+    feeds: [
+      { id: 'The Decoder',    color: '#1a6b3c', url: 'https://the-decoder.de/feed/' },
+      { id: 'HN – AI/LLM',   color: '#c26519', url: 'https://hnrss.org/newest?q=LLM+Claude+GPT&count=20' },
+      { id: 'Import AI',      color: '#6237b5', url: 'https://jack-clark.net/feed/' },
+      { id: 'MIT Tech Rev.',  color: '#9c1414', url: 'https://www.technologyreview.com/feed/' },
+    ]
+  },
+  'w-sec': {
+    label: 'Security & OSINT',
+    feeds: [
+      { id: 'The Hacker News', color: '#b30000', url: 'https://feeds.feedburner.com/TheHackersNews' },
+      { id: 'BleepingComputer',color: '#004c8c', url: 'https://www.bleepingcomputer.com/feed/' },
+      { id: 'Krebs',           color: '#2e5c1e', url: 'https://krebsonsecurity.com/feed/' },
+      { id: 'Schneier',        color: '#555',    url: 'https://www.schneier.com/feed/atom' },
+    ]
+  },
+  'w-dark': {
+    label: 'Darknet OSINT',
+    feeds: [
+      { id: 'IntelTechniques', color: '#1a1a4e', url: 'https://inteltechniques.com/blog/feed/' },
+      { id: 'Bellingcat',      color: '#8b3000', url: 'https://www.bellingcat.com/feed/' },
+      { id: 'SANS ISC',        color: '#005050', url: 'https://isc.sans.edu/rssfeed.xml' },
+      { id: 'NixIntel',        color: '#3d1a6b', url: 'https://nixintel.info/feed/' },
+    ]
+  },
+  'w-btc': {
+    label: 'Bitcoin & Crypto',
+    feeds: [
+      { id: 'Bitcoin Mag.',    color: '#c47a00', url: 'https://bitcoinmagazine.com/feed' },
+      { id: 'CoinTelegraph',   color: '#0050a0', url: 'https://cointelegraph.com/rss' },
+      { id: 'The Block',       color: '#1a6b3c', url: 'https://www.theblock.co/rss.xml' },
+      { id: 'Decrypt',         color: '#6b1a5a', url: 'https://decrypt.co/feed' },
+    ]
+  },
+  'w-trade': {
+    label: 'Trading & Finance',
+    feeds: [
+      { id: 'ZeroHedge',       color: '#6b0000', url: 'https://feeds.feedburner.com/zerohedge/feed' },
+      { id: 'HN – Trading',    color: '#c26519', url: 'https://hnrss.org/newest?q=trading+bot+algorithmic+quant&count=20' },
+      { id: 'Quantocracy',     color: '#1a4a6b', url: 'https://quantocracy.com/feed/' },
+      { id: 'ERN Blog',        color: '#2e5c1e', url: 'https://earlyretirementnow.com/feed/' },
+    ]
+  },
+  'w-tech': {
+    label: 'Tech & Automation',
+    feeds: [
+      { id: 'Hacker News',     color: '#c26519', url: 'https://hnrss.org/frontpage' },
+      { id: 'TechCrunch',      color: '#0d7033', url: 'https://techcrunch.com/feed/' },
+      { id: 'n8n Blog',        color: '#8b0077', url: 'https://blog.n8n.io/rss/' },
+      { id: 'Product Hunt',    color: '#c43b00', url: 'https://www.producthunt.com/feed' },
+    ]
+  },
+  'w-intel': {
+    label: 'Deep Intel',
+    feeds: [
+      { id: 'RansomLook',      color: '#8b0000', url: 'https://www.ransomlook.io/rss.xml' },
+      { id: 'Dark Reading',    color: '#1a1a4e', url: 'https://www.darkreading.com/rss.xml' },
+      { id: 'Threatpost',      color: '#3d0070', url: 'https://threatpost.com/feed/' },
+      { id: 'Wired Security',  color: '#003d6b', url: 'https://www.wired.com/feed/category/security/latest/rss' },
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════
+// RSS FETCHER  — parallel race across 25 proxies, fastest wins
+// ═══════════════════════════════════════════════
+function parseXML(xmlStr) {
+  const xml = new DOMParser().parseFromString(xmlStr, 'application/xml');
+  return [...xml.querySelectorAll('item, entry')].map(el => {
+    const linkEl = el.querySelector('link');
+    return {
+      title:       el.querySelector('title')?.textContent?.trim() || '',
+      link:        linkEl?.textContent?.trim() || linkEl?.getAttribute('href') || '',
+      description: el.querySelector('description, summary, content')?.textContent || '',
+      pubDate:     el.querySelector('pubDate, published, updated')?.textContent || '',
+    };
+  });
+}
+
+function normalizeItems(items) {
+  return items.filter(it => it.title && it.link);
+}
+
+// Antwort-Validierung: Fehlerstatus (403-Blockseiten, 522er) darf das Race nicht gewinnen
+function okText(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }
+function okJson(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+
+// Cloudflare & Co. liefern Challenge-Seiten oft mit HTTP 200 über Proxies aus —
+// die dürfen das Race nicht gewinnen ("Just a moment…" als Artikel)
+function isBlockPage(html) {
+  return /just a moment|attention required|access denied|verify you are human|checking your browser|enable javascript and cookies|__cf_chl|cf-challenge|ddos protection|captcha/i
+    .test(html.slice(0, 4000));
+}
+
+// Each proxy entry: { fetch: signal => Promise<items[]|null> }
+// Proxy-Liste getestet 19.07.2026 — tote Dienste entfernt (DNS weg: thingproxy, yacdn,
+// cors.bridged.cc, crossorigin.me, fringe.zone, gobetween, speedycors, cors-proxy.io;
+// dauerhaft 403: corsproxy.io; nur noch Parkseite: whateverorigin)
+function buildProxies(url) {
+  const enc = encodeURIComponent(url);
+  return [
+    // ── Getestet 19.07.2026: funktionieren ────────────────────────────────
+    {
+      fetch: (s) => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${enc}`, { signal: s })
+        .then(okJson)
+        .then(d => {
+          if (d.status !== 'ok' || !d.items?.length) return null;
+          return d.items.map(it => ({ title: it.title||'', link: it.link||'', description: it.description||it.content||'', pubDate: it.pubDate||'' }));
+        })
+    },
+    {
+      fetch: (s) => fetch(`https://feedmix.novaclic.com/atom2rss.php?source=${enc}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://cloud.feedly.com/v3/streams/contents?streamId=feed/${url}`, { signal: s })
+        .then(okJson)
+        .then(d => {
+          if (!d.items?.length) return null;
+          return d.items.map(it => ({
+            title:       it.title?.content || it.title || '',
+            link:        it.alternate?.[0]?.href || it.originId || '',
+            description: it.summary?.content || it.content?.content || '',
+            pubDate:     it.published ? new Date(it.published).toISOString() : '',
+          }));
+        })
+    },
+    {
+      fetch: (s) => fetch(`https://feed2json.org/convert?url=${enc}`, { signal: s })
+        .then(okJson)
+        .then(d => {
+          if (!d.items?.length) return null;
+          return d.items.map(it => ({
+            title:       it.title || '',
+            link:        it.url || it.id || '',
+            description: it.content_html || it.summary || '',
+            pubDate:     it.date_published || it.date_modified || '',
+          }));
+        })
+    },
+    {
+      fetch: (s) => fetch(`https://cors.sh/${url}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://cors.eu.org/${url}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://alloworigin.com/get?url=${enc}`, { signal: s })
+        .then(okJson)
+        .then(d => { const i = parseXML(d.contents || ''); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://corsmirror.com/v1?url=${enc}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://cors-get-proxy.sirjosh.workers.dev/?url=${enc}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    // ── Instabil (zeitweise 522/Timeout), aber echte Dienste — Reserve ────
+    {
+      fetch: (s) => fetch(`https://api.allorigins.win/get?url=${enc}`, { signal: s })
+        .then(okJson)
+        .then(d => { const i = parseXML(d.contents || ''); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://api.allorigins.win/raw?url=${enc}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://api2.allorigins.win/get?url=${enc}`, { signal: s })
+        .then(okJson)
+        .then(d => { const i = parseXML(d.contents || ''); return i.length ? i : null; })
+    },
+    {
+      fetch: (s) => fetch(`https://api.codetabs.com/v1/proxy?quest=${enc}`, { signal: s })
+        .then(okText).then(t => { const i = parseXML(t); return i.length ? i : null; })
+    },
+  ];
+}
+
+async function fetchFeed(url) {
+  // Großzügig: Proxy-Dienste sind langsam. Wichtig ist nur, dass das Race
+  // garantiert endet — vorher wurde das Controller-Signal nie an fetch()
+  // übergeben, hängende Proxies blockierten das Race endlos.
+  const TIMEOUT_MS = 20000;
+  const proxies = buildProxies(url);
+
+  return new Promise((resolve, reject) => {
+    let resolved = false;
+    let remaining = proxies.length;
+
+    proxies.forEach(proxy => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+      proxy.fetch(controller.signal)
+        .then(items => {
+          if (!resolved && items?.length) {
+            resolved = true;
+            resolve(normalizeItems(items));
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          clearTimeout(timer);
+          remaining--;
+          if (remaining === 0 && !resolved) {
+            reject(new Error(`Alle ${proxies.length} Proxies fehlgeschlagen`));
+          }
+        });
+    });
+  });
+}
+
+function stripHtml(html) {
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return (d.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function fmtDate(str) {
+  if (!str) return '';
+  try {
+    const d = new Date(str);
+    return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })
+      + ' ' + d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+  } catch { return str.slice(0,10); }
+}
+
+// ── Mini-Markdown → HTML (für Jina-Reader-Output; hält "eine Datei"-Prinzip, kein Lib) ──
+function mdInline(s) {
+  return s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g, (m, alt, src) => `<img alt="${alt}" src="${src}">`)
+    .replace(/\[([^\]]+)\]\(([^)\s]+)[^)]*\)/g, (m, txt, href) => `<a href="${href}" data-ie-url="${href}">${txt}</a>`)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+function mdToHtml(md) {
+  const lines = md.replace(/\r/g, '').split('\n');
+  const out = [];
+  let para = [], list = null;
+  const flushPara = () => { if (para.length) { out.push('<p>' + mdInline(para.join(' ')) + '</p>'); para = []; } };
+  const flushList = () => { if (list) { out.push(`<${list.type}>` + list.items.map(i => '<li>' + mdInline(i) + '</li>').join('') + `</${list.type}>`); list = null; } };
+  const flushAll = () => { flushPara(); flushList(); };
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { flushAll(); continue; }
+    let m;
+    if ((m = line.match(/^(#{1,6})\s+(.*)/))) { flushAll(); const lvl = Math.min(m[1].length + 1, 6); out.push(`<h${lvl}>${mdInline(m[2])}</h${lvl}>`); continue; }
+    if (/^([-*_])\1{2,}\s*$/.test(line)) { flushAll(); out.push('<hr>'); continue; }
+    if ((m = line.match(/^>\s?(.*)/))) { flushPara(); flushList(); out.push('<blockquote>' + mdInline(m[1]) + '</blockquote>'); continue; }
+    if ((m = line.match(/^\s*[-*+]\s+(.*)/))) { flushPara(); if (!list || list.type !== 'ul') { flushList(); list = { type: 'ul', items: [] }; } list.items.push(m[1]); continue; }
+    if ((m = line.match(/^\s*\d+\.\s+(.*)/))) { flushPara(); if (!list || list.type !== 'ol') { flushList(); list = { type: 'ol', items: [] }; } list.items.push(m[1]); continue; }
+    flushList(); para.push(line.trim());
+  }
+  flushAll();
+  return out.join('\n');
+}
+function parseJina(text) {
+  const idx = text.indexOf('Markdown Content:');
+  const header = idx >= 0 ? text.slice(0, idx) : '';
+  const body = idx >= 0 ? text.slice(idx + 'Markdown Content:'.length) : text;
+  const title = (header.match(/^Title:\s*(.+)$/m) || [])[1] || '';
+  const bodyTrim = body.trim();
+  // Jina-Fehlerseiten ("Warning: Target URL returned error 4xx/5xx") aussortieren
+  if (/^Warning: Target URL returned/i.test(bodyTrim)) return null;
+  return { title: title.trim(), html: mdToHtml(bodyTrim) };
+}
+
+// ═══════════════════════════════════════════════
+// WINDOW STATE
+// ═══════════════════════════════════════════════
+let zTop = 100;
+const wState = {}; // id → { minimized, maximized, prevRect, loaded }
+const tbBtns = {};
+const activePill = {}; // id → feedIndex (null = all)
+const feedCache = {};  // id → { feedIdx → items }
+
+function initAll() {
+  document.querySelectorAll('.win').forEach(win => {
+    const id = win.id;
+    wState[id] = { minimized: false, maximized: false, prevRect: null, loaded: false };
+    win.classList.add('hidden');
+    win.addEventListener('mousedown', () => focusWin(id));
+
+    // build pills
+    const cat = CATS[id];
+    if (cat) {
+      const pillBox = document.getElementById('pills-' + id);
+      // "Alle" pill
+      const all = mkPill('Alle', null, id, true);
+      pillBox.appendChild(all);
+      cat.feeds.forEach((f, i) => pillBox.appendChild(mkPill(f.id, i, id, false)));
+      activePill[id] = null;
+      feedCache[id] = {};
+    }
+
+    // taskbar button
+    const icon = win.querySelector('.t-icon');
+    const title = win.querySelector('.t-title');
+    const btn = document.createElement('div');
+    btn.className = 'tb-btn';
+    btn.textContent = (icon ? icon.textContent : '') + ' ' + (title ? title.textContent : id);
+    btn.onclick = () => toggleTbWin(id);
+    document.getElementById('tb-wins').appendChild(btn);
+    tbBtns[id] = btn;
+    btn.style.display = 'none';
+  });
+}
+
+function mkPill(label, feedIdx, winId, isActive) {
+  const p = document.createElement('div');
+  p.className = 'pill' + (isActive ? ' active' : '');
+  p.textContent = label;
+  p.onclick = () => {
+    activePill[winId] = feedIdx;
+    document.querySelectorAll(`#pills-${winId} .pill`).forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    renderFeed(winId, feedIdx);
+  };
+  return p;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+async function loadAndRender(winId, feedIdx) {
+  const cat = CATS[winId];
+  if (!cat) return;
+
+  const feedEl = document.getElementById('feed-' + winId);
+  const statEl = document.getElementById('stat-' + winId);
+  const timeEl = document.getElementById('stat-time-' + winId);
+
+  // if already cached
+  if (feedCache[winId][feedIdx] !== undefined) {
+    renderItems(feedEl, feedCache[winId][feedIdx], cat, feedIdx);
+    return;
+  }
+
+  feedEl.innerHTML = '<div class="feed-loading"><span class="spinner">⟳</span> Lade Feed…</div>';
+  statEl.textContent = 'Lädt…';
+
+  const feeds = feedIdx === null ? cat.feeds : [cat.feeds[feedIdx]];
+  const results = [];
+  const errors = [];
+
+  for (const f of feeds) {
+    try {
+      const items = await fetchFeed(f.url);
+      items.forEach(item => results.push({ ...item, _src: f.id, _color: f.color }));
+    } catch (e) {
+      errors.push(`${f.id}: ${e.message}`);
+    }
+  }
+
+  // sort by date desc
+  results.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+  feedCache[winId][feedIdx] = results;
+
+  if (results.length === 0 && errors.length > 0) {
+    feedEl.innerHTML = `<div class="feed-error">
+      <strong>⚠ Feeds konnten nicht geladen werden:</strong><br><br>
+      ${errors.map(e => `• ${e}`).join('<br>')}
+      <br><br><small>Mögliche Ursachen: Feed-URL geändert, CORS-Block, Netzwerkfehler.<br>
+      Klicke ↻ Aktualisieren um es erneut zu versuchen.</small>
+    </div>`;
+  } else {
+    renderItems(feedEl, results, cat, feedIdx);
+  }
+
+  statEl.textContent = results.length + ' Artikel' + (errors.length ? ` (${errors.length} Fehler)` : '');
+  timeEl.textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+}
+
+function renderItems(feedEl, items, cat, feedIdx) {
+  if (!items || items.length === 0) {
+    feedEl.innerHTML = '<div class="feed-empty">Keine Artikel gefunden.</div>';
+    return;
+  }
+  feedEl.innerHTML = '';
+  items.forEach(item => {
+    const desc = stripHtml(item.description || '').slice(0, 140);
+    const div = document.createElement('div');
+    div.className = 'feed-item';
+    div.innerHTML = `
+      <div class="feed-item-header">
+        <span class="feed-src" style="background:${item._color || '#555'}">${item._src || ''}</span>
+        <span class="feed-title">${item.title || '(kein Titel)'}</span>
+      </div>
+      ${desc ? `<div class="feed-desc">${desc}…</div>` : ''}
+      <div class="feed-date">📅 ${fmtDate(item.pubDate)}</div>
+    `;
+    div.onclick = () => item.link && openInIE(item.link, item.title, item.description, item.pubDate);
+    feedEl.appendChild(div);
+  });
+}
+
+function renderFeed(winId, feedIdx) {
+  loadAndRender(winId, feedIdx);
+}
+
+async function refreshWin(id) {
+  // clear cache for current pill
+  const idx = activePill[id];
+  feedCache[id][idx] = undefined;
+  await loadAndRender(id, idx);
+}
+
+// ═══════════════════════════════════════════════
+// WINDOW MANAGEMENT
+// ═══════════════════════════════════════════════
+function focusWin(id) {
+  zTop++;
+  const win = document.getElementById(id);
+  win.style.zIndex = zTop;
+  win.classList.remove('inactive');
+  document.querySelectorAll('.win').forEach(w => { if (w.id !== id) w.classList.add('inactive'); });
+  Object.keys(tbBtns).forEach(k => tbBtns[k].classList.toggle('on', k === id));
+}
+
+function openWin(id) {
+  const win = document.getElementById(id);
+  win.classList.remove('hidden');
+  wState[id].minimized = false;
+  tbBtns[id].style.display = '';
+  focusWin(id);
+  if (!wState[id].loaded) {
+    wState[id].loaded = true;
+    // if background prefetch already has data, render immediately from cache
+    const hasCached = feedCache[id] && feedCache[id][null] !== undefined && (feedCache[id][null]?.length ?? 0) > 0;
+    if (hasCached) {
+      const cat = CATS[id];
+      if (cat) {
+        const feedEl = document.getElementById('feed-' + id);
+        const statEl = document.getElementById('stat-' + id);
+        const timeEl = document.getElementById('stat-time-' + id);
+        renderItems(feedEl, feedCache[id][null], cat, null);
+        statEl.textContent = feedCache[id][null].length + ' Artikel (prefetched)';
+        timeEl.textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+      }
+    } else {
+      loadAndRender(id, null);
+    }
+  }
+}
+
+function closeWin(id) {
+  document.getElementById(id).classList.add('hidden');
+  wState[id].minimized = false;
+  tbBtns[id].style.display = 'none';
+  tbBtns[id].classList.remove('on');
+}
+
+function minWin(id) {
+  document.getElementById(id).classList.add('hidden');
+  wState[id].minimized = true;
+  tbBtns[id].classList.remove('on');
+}
+
+function maxWin(id) {
+  const win = document.getElementById(id);
+  const s = wState[id];
+  const dsk = document.getElementById('desktop');
+  if (!s.maximized) {
+    s.prevRect = { left: win.style.left, top: win.style.top, width: win.style.width, height: win.style.height };
+    win.style.cssText += ';left:0;top:0;width:' + dsk.offsetWidth + 'px;height:' + dsk.offsetHeight + 'px';
+    s.maximized = true;
+  } else {
+    const r = s.prevRect;
+    win.style.left = r.left; win.style.top = r.top;
+    win.style.width = r.width; win.style.height = r.height;
+    s.maximized = false;
+  }
+  focusWin(id);
+}
+
+function toggleTbWin(id) {
+  const s = wState[id];
+  const win = document.getElementById(id);
+  if (win.classList.contains('hidden')) { openWin(id); }
+  else if (tbBtns[id].classList.contains('on')) { minWin(id); }
+  else { focusWin(id); }
+}
+
+// ═══════════════════════════════════════════════
+// DRAG & RESIZE
+// ═══════════════════════════════════════════════
+function dragStart(e, id) {
+  if (e.target.classList.contains('tbtn')) return;
+  if (wState[id].maximized) return;
+  const win = document.getElementById(id);
+  focusWin(id);
+  const ox = e.clientX - win.offsetLeft, oy = e.clientY - win.offsetTop;
+  const dsk = document.getElementById('desktop');
+  function move(e) {
+    let x = Math.max(-win.offsetWidth + 40, Math.min(e.clientX - ox, dsk.offsetWidth - 40));
+    let y = Math.max(0, Math.min(e.clientY - oy, dsk.offsetHeight - 28));
+    win.style.left = x + 'px'; win.style.top = y + 'px';
+  }
+  function up() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); }
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  e.preventDefault();
+}
+
+function resizeStart(e, id) {
+  const win = document.getElementById(id);
+  const sw = win.offsetWidth, sh = win.offsetHeight, sx = e.clientX, sy = e.clientY;
+  focusWin(id);
+  function move(e) {
+    win.style.width  = Math.max(240, sw + e.clientX - sx) + 'px';
+    win.style.height = Math.max(160, sh + e.clientY - sy) + 'px';
+  }
+  function up() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); }
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  e.preventDefault();
+}
+
+// ═══════════════════════════════════════════════
+// START MENU
+// ═══════════════════════════════════════════════
+function toggleSmenu() {
+  const m = document.getElementById('smenu');
+  const b = document.getElementById('start-btn');
+  const on = m.classList.toggle('on');
+  b.classList.toggle('on', on);
+}
+function closeSmenu() {
+  document.getElementById('smenu').classList.remove('on');
+  document.getElementById('start-btn').classList.remove('on');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#smenu') && !e.target.closest('#start-btn')) closeSmenu();
+});
+
+// ═══════════════════════════════════════════════
+// ICON SELECT
+// ═══════════════════════════════════════════════
+function selIcon(el) {
+  document.querySelectorAll('.icon').forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+}
+document.getElementById('desktop').addEventListener('click', e => {
+  if (!e.target.closest('.icon')) document.querySelectorAll('.icon').forEach(i => i.classList.remove('sel'));
+});
+
+// ═══════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick, 10000);
+
+// ═══════════════════════════════════════════════
+// FAVORITEN
+// ═══════════════════════════════════════════════
+const BOOKMARKS = [
+  // KI & LLMs
+  {cat:'ki',     icon:'🤖', label:'ChatGPT',              url:'https://openai.com/chatgpt/overview/',                            ok:true},
+  {cat:'ki',     icon:'🎨', label:'DALL·E 2',             url:'https://openai.com/dall-e-2/',                                    ok:true},
+  {cat:'ki',     icon:'🎬', label:'Synthesia',            url:'https://www.synthesia.io/',                                       ok:true},
+  {cat:'ki',     icon:'✍️', label:'Jasper AI',            url:'https://www.jasper.ai/',                                          ok:true},
+  {cat:'ki',     icon:'🔊', label:'Play.ht Voice',        url:'https://play.ht/',                                                ok:true},
+  {cat:'ki',     icon:'💻', label:'GitHub Copilot',       url:'https://github.com/features/copilot',                            ok:true},
+  {cat:'ki',     icon:'📹', label:'Pictory Video',        url:'https://pictory.ai/',                                             ok:true},
+  {cat:'ki',     icon:'🎙️', label:'Fireflies',            url:'https://fireflies.ai/',                                           ok:true},
+  {cat:'ki',     icon:'📝', label:'Jenni AI',             url:'https://jenni.ai/',                                               ok:true},
+  {cat:'ki',     icon:'💬', label:'ChatSonic',            url:'https://writesonic.com/chat',                                     ok:true},
+  {cat:'ki',     icon:'⚡', label:'neuroflash DE',        url:'https://neuroflash.com/de/',                                      ok:true},
+  {cat:'ki',     icon:'💡', label:'100 ChatGPT Prompts',  url:'https://mpost.io/100-best-chatgpt-prompts-to-unleash-ais-potential/', ok:true},
+  {cat:'ki',     icon:'🇩🇪', label:'ChatGPT Guide DE',    url:'https://the-decoder.de/chatgpt-guide-prompt-strategien/',         ok:true},
+  // Security & OSINT
+  {cat:'security',icon:'📡', label:'The Daily Swig',      url:'https://portswigger.net/daily-swig',                              ok:true},
+  {cat:'security',icon:'🗺️', label:'MITRE ATT&CK',        url:'https://attack.mitre.org/matrices/enterprise/',                   ok:true},
+  {cat:'security',icon:'🔭', label:'Shodan',              url:'https://www.shodan.io/',                                          ok:true},
+  {cat:'security',icon:'🐛', label:'Bugcrowd',            url:'https://www.bugcrowd.com/',                                       ok:true},
+  {cat:'security',icon:'🔐', label:'Krebs on Security',   url:'https://krebsonsecurity.com/',                                    ok:true},
+  {cat:'security',icon:'🔍', label:'Google Hacking DB',   url:'https://www.exploit-db.com/google-hacking-database',             ok:true},
+  {cat:'security',icon:'🛠️', label:'recon-ng | Kali',     url:'https://www.kali.org/tools/recon-ng/',                           ok:true},
+  {cat:'security',icon:'🌾', label:'theHarvester | Kali', url:'https://www.kali.org/tools/theharvester/',                        ok:true},
+  {cat:'security',icon:'🎩', label:'HackTricks',          url:'https://book.hacktricks.xyz/',                                    ok:true},
+  {cat:'security',icon:'🧬', label:'Intezer',             url:'https://www.intezer.com/',                                        ok:true},
+  {cat:'security',icon:'🦠', label:'ESET Virusradar',     url:'https://www.virusradar.com/',                                     ok:true},
+  {cat:'security',icon:'📦', label:'Hack The Box',        url:'https://academy.hackthebox.com/dashboard',                        ok:true},
+  // Darknet OSINT
+  {cat:'darknet',icon:'🌑', label:'Daily Dark Web',       url:'https://dailydarkweb.net/',                                       ok:true},
+  {cat:'darknet',icon:'⚠️', label:'BreachForums',         url:'https://breachforums.com/',                                       ok:true},
+  {cat:'darknet',icon:'🔍', label:'grep.app',             url:'https://grep.app/',                                               ok:true},
+  {cat:'darknet',icon:'🗝️', label:'DeHashed',             url:'https://dehashed.com/',                                           ok:true},
+  {cat:'darknet',icon:'📖', label:'Phonebook.cz',         url:'https://phonebook.cz/',                                           ok:true},
+  {cat:'darknet',icon:'🧰', label:'OSINT Toolbox',        url:'https://github.com/The-Osint-Toolbox/Data-Acquisition-OSINT',    ok:true},
+  {cat:'darknet',icon:'🎧', label:'Darknet Diaries',      url:'https://darknetdiaries.com/',                                     ok:true},
+  {cat:'darknet',icon:'👤', label:'Namechk',              url:'https://namechk.com/',                                            ok:true},
+  {cat:'darknet',icon:'🔭', label:'ZoomEye',              url:'https://www.zoomeye.org/',                                        ok:true},
+  {cat:'darknet',icon:'🧮', label:'Wolfram Alpha',        url:'https://www.wolframalpha.com/',                                   ok:true},
+  {cat:'darknet',icon:'🔍', label:'IntelX.io',             url:'https://intelx.io/',                                              ok:true},
+  // Deep Intel
+  {cat:'deepintel',icon:'☠️', label:'Ransomware.live',    url:'https://www.ransomware.live/',                                    ok:true},
+  {cat:'deepintel',icon:'💧', label:'DataBreaches.net',   url:'https://databreaches.net/',                                       ok:true},
+  {cat:'deepintel',icon:'📡', label:'SOCRadar',           url:'https://socradar.io/',                                            ok:true},
+  {cat:'deepintel',icon:'🕸️', label:'RedPacket Security', url:'https://www.redpacketsecurity.com/',                              ok:true},
+  {cat:'deepintel',icon:'⚡', label:'Flashpoint',         url:'https://flashpoint.io/blog/',                                    ok:true},
+  {cat:'deepintel',icon:'🌑', label:'DDoSecrets',         url:'https://ddosecrets.com/',                                         ok:true},
+  {cat:'deepintel',icon:'📰', label:'Security Affairs',   url:'https://securityaffairs.com/',                                    ok:true},
+  {cat:'deepintel',icon:'🔎', label:'Dark Reading',       url:'https://www.darkreading.com/',                                    ok:true},
+  {cat:'deepintel',icon:'🏦', label:'BankInfoSecurity',   url:'https://www.bankinfosecurity.com/',                               ok:true},
+  {cat:'deepintel',icon:'🔴', label:'Threatpost',         url:'https://threatpost.com/',                                         ok:true},
+  // Bitcoin & Crypto
+  {cat:'bitcoin',icon:'💰', label:'Coinbase Wallet',      url:'https://wallet.coinbase.com/de/home/explore',                     ok:true},
+  {cat:'bitcoin',icon:'📊', label:'Coinbase',             url:'https://www.coinbase.com/',                                       ok:true},
+  {cat:'bitcoin',icon:'📚', label:'Udemy Crypto Course',  url:'https://www.udemy.com/course/the-complete-cryptocurrency-trading-course/', ok:true},
+  // Tech
+  {cat:'tech',   icon:'☁️', label:'AWS Console',          url:'https://aws.amazon.com/de/console/',                              ok:true},
+  {cat:'tech',   icon:'🔷', label:'Azure Portal',         url:'https://portal.azure.com/#allservices',                           ok:true},
+  {cat:'tech',   icon:'📖', label:'explainshell',         url:'https://explainshell.com/',                                       ok:true},
+  {cat:'tech',   icon:'🔓', label:'CrackStation',         url:'https://crackstation.net/',                                       ok:true},
+  {cat:'tech',   icon:'🪟', label:'Windows OS Hub',       url:'http://woshub.com/',                                              ok:true},
+  {cat:'tech',   icon:'⚙️', label:'Adam the Automator',   url:'https://adamtheautomator.com/',                                   ok:true},
+  {cat:'tech',   icon:'🐉', label:'Kali Linux',           url:'https://www.kali.org/',                                           ok:true},
+  {cat:'tech',   icon:'📅', label:'End of Life Date',     url:'https://endoflife.date/macos',                                    ok:true},
+];
+
+const FAV_CATS = {
+  ki:        {label:'KI & LLMs',         color:'#1a4a6b'},
+  security:  {label:'Security & OSINT',  color:'#6b0000'},
+  darknet:   {label:'Darknet OSINT',     color:'#1a1a3e'},
+  deepintel: {label:'Deep Intel',        color:'#4a0000'},
+  bitcoin:   {label:'Bitcoin & Crypto',  color:'#c47a00'},
+  tech:      {label:'Tech',              color:'#1a6b1a'},
+};
+
+let favActiveCat = 'all';
+
+function initFavoriten() {
+  const pillBox = document.getElementById('fav-pills');
+  const allPill = document.createElement('div');
+  allPill.className = 'pill active'; allPill.textContent = 'Alle';
+  allPill.onclick = () => { favActiveCat='all'; renderFav(); setFavPill(allPill); };
+  pillBox.appendChild(allPill);
+
+  Object.entries(FAV_CATS).forEach(([key, {label}]) => {
+    const p = document.createElement('div');
+    p.className = 'pill'; p.textContent = label;
+    p.onclick = () => { favActiveCat=key; renderFav(); setFavPill(p); };
+    pillBox.appendChild(p);
+  });
+  renderFav();
+}
+
+function setFavPill(active) {
+  document.querySelectorAll('#fav-pills .pill').forEach(p => p.classList.remove('active'));
+  active.classList.add('active');
+}
+
+function renderFav() {
+  const items = favActiveCat === 'all' ? BOOKMARKS : BOOKMARKS.filter(b => b.cat === favActiveCat);
+  const stat = document.getElementById('fav-stat');
+  stat.textContent = `${items.length} Lesezeichen · Quelle: favorites_13.06.26.html`;
+
+  // Group by cat for icon grid view
+  const content = document.getElementById('fav-content');
+  content.innerHTML = '';
+  content.style.padding = '10px';
+  content.style.display = 'flex';
+  content.style.flexWrap = 'wrap';
+  content.style.gap = '4px';
+  content.style.alignContent = 'flex-start';
+  content.style.background = '#d4d0c8';
+
+  items.forEach(bm => {
+    const catInfo = FAV_CATS[bm.cat] || {color:'#555'};
+    const div = document.createElement('div');
+    div.style.cssText = `
+      width:80px; display:flex; flex-direction:column; align-items:center;
+      gap:4px; padding:8px 4px; cursor:default;
+      border:1px solid transparent;
+    `;
+    div.innerHTML = `
+      <div style="font-size:30px;line-height:1.2">${bm.icon}</div>
+      <div style="width:8px;height:8px;border-radius:50%;background:${catInfo.color};margin-bottom:1px" title="${catInfo.label}"></div>
+      <div style="font-size:10px;text-align:center;color:#000;word-break:break-word;line-height:1.3;max-width:76px">${bm.label}</div>
+    `;
+    div.addEventListener('mouseenter', () => {
+      div.style.border = '1px solid rgba(0,0,128,.4)';
+      div.style.background = 'rgba(0,0,128,.1)';
+    });
+    div.addEventListener('mouseleave', () => {
+      div.style.border = '1px solid transparent';
+      div.style.background = '';
+    });
+    div.addEventListener('dblclick', () => openInIE(bm.url, bm.label));
+    div.addEventListener('click', () => {
+      document.querySelectorAll('#fav-content > div').forEach(d => {
+        d.style.border = '1px solid transparent'; d.style.background = '';
+      });
+      div.style.border = '1px solid rgba(0,0,128,.6)';
+      div.style.background = 'rgba(0,0,128,.2)';
+      document.getElementById('fav-stat').textContent = `${bm.label} · ${bm.url}`;
+    });
+    content.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// IE5 BROWSER – READER MODE
+// ═══════════════════════════════════════════════
+let ieHist = [], ieIdx = -1, ieAbort = null;
+let _ieCurrentArticle = {};
+
+function ieLoadFull(url, title) {
+  ieLoad(url, title, null, null);
+}
+
+function ieReadCurrentWithClaude() {
+  const a = _ieCurrentArticle;
+  ieReadWithClaude(a.url, a.title, a.description);
+}
+
+// ── Claude API Reader ──────────────────────────────────────────────────────
+function getAnthropicKey() {
+  return localStorage.getItem('anthropic_key') || '';
+}
+
+function setAnthropicKey(k) {
+  localStorage.setItem('anthropic_key', k.trim());
+}
+
+async function ieReadWithClaude(url, title, description) {
+  let key = getAnthropicKey();
+  if (!key) {
+    key = window.prompt('Anthropic API Key eingeben (wird in localStorage gespeichert):');
+    if (!key) return;
+    setAnthropicKey(key);
+  }
+
+  const reader  = document.getElementById('ie-reader');
+  const loading = document.getElementById('ie-loading');
+  const logo    = document.getElementById('ie-logo');
+  const status  = document.getElementById('ie-status');
+
+  reader.style.display  = 'none';
+  loading.style.display = 'flex';
+  logo.classList.add('spin');
+  status.textContent = 'Claude liest Artikel…';
+
+  // Try to get raw HTML via proxy race first
+  let rawText = '';
+  try {
+    const enc = encodeURIComponent(url);
+    rawText = await Promise.any([
+      // Jina Reader liefert bereits extrahierten Artikel-Text (Markdown) — bester LLM-Input
+      fetch(`https://r.jina.ai/${url}`).then(okText),
+      fetch(`https://api.allorigins.win/get?url=${enc}`).then(okJson).then(d=>d.contents||''),
+      fetch(`https://cors.sh/${url}`).then(okText),
+      fetch(url).then(okText),
+    ].map(p => p.then(t => { if (!t || t.length < 200 || isBlockPage(t)) throw new Error('empty'); return t; })));
+    // Strip to plain text
+    const tmp = document.createElement('div');
+    tmp.innerHTML = rawText;
+    tmp.querySelectorAll('script,style,nav,header,footer,aside').forEach(el=>el.remove());
+    rawText = (tmp.textContent||'').replace(/\s+/g,' ').trim().slice(0, 12000);
+  } catch(e) { rawText = ''; }
+
+  const hasRaw = rawText.length > 300;
+  const claudePrompt = hasRaw
+    ? `Du bist ein Redakteur. Schreibe den folgenden Artikel als sauberen, gut lesbaren HTML-Text neu. Nur <h2>, <p>, <ul>, <li> Tags. Kein <html>/<body>/<head>. Behalte alle wichtigen Fakten. Auf Deutsch wenn der Artikel deutsch ist, sonst auf Englisch.\n\nArtikel-URL: ${url}\nTitel: ${title}\n\nArtikel-Rohdaten:\n${rawText}`
+    : `Schreibe einen informativen Artikel-Text zu diesem Thema basierend auf deinem Wissen. Format: <h2> für Abschnitte, <p> für Absätze. Nur HTML-Tags, kein <html>/<body>. Auf Deutsch wenn möglich.\n\nURL: ${url}\nTitel: ${title}\nRSS-Beschreibung: ${description || '(keine)'}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: claudePrompt }]
+      })
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem('anthropic_key');
+      throw new Error('Ungültiger API Key — bitte erneut eingeben');
+    }
+    if (!res.ok) throw new Error(`Claude API Fehler: ${res.status}`);
+
+    const data = await res.json();
+    const html = data.content?.[0]?.text || '';
+    const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })();
+
+    reader.innerHTML = `
+      <div class="ie-reader-src">🤖 Claude Reader — ${url}</div>
+      <h1>${title || '(kein Titel)'}</h1>
+      <div class="ie-reader-meta">Quelle: ${domain} · ${hasRaw ? 'Artikel gelesen' : 'Aus Claude-Wissen'}</div>
+      <div>${html}</div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--rd-border);font-size:12px;color:var(--rd-muted)">
+        <button onclick="window.open('${url.replace(/'/g,"\\'")}','_blank')" style="padding:4px 12px;background:#00008b;color:#fff;border:none;cursor:pointer;font-family:'W95FA',monospace;font-size:12px">🌐 Im Browser öffnen</button>
+        <button onclick="ieReadCurrentWithClaude()" style="margin-left:6px;padding:4px 12px;background:#c0c0c0;border:2px outset #fff;cursor:pointer;font-family:'W95FA',monospace;font-size:12px">↻ Nochmal lesen</button>
+        <span style="margin-left:12px;color:#999">API Key: <a href="#" onclick="localStorage.removeItem('anthropic_key');alert('Key gelöscht')" style="color:#999">löschen</a></span>
+      </div>
+    `;
+    loading.style.display = 'none';
+    reader.style.display  = 'block';
+    logo.classList.remove('spin');
+    status.textContent = 'Fertig (Claude)';
+    reader.scrollTop = 0;
+  } catch(e) {
+    loading.style.display = 'none';
+    logo.classList.remove('spin');
+    status.textContent = 'Fehler';
+    reader.innerHTML = `<div style="padding:20px;font-family:Arial;color:#c00"><b>Fehler:</b> ${e.message}</div>`;
+    reader.style.display = 'block';
+  }
+}
+
+function openInIE(url, title, description, pubDate) {
+  if (!wState['w-ie']) wState['w-ie'] = { minimized:false, maximized:false, prevRect:null, loaded:true };
+  const win = document.getElementById('w-ie');
+  win.classList.remove('hidden');
+  wState['w-ie'].minimized = false;
+  if (tbBtns['w-ie']) tbBtns['w-ie'].style.display = '';
+  focusWin('w-ie');
+  ieLoad(url, title, description, pubDate);
+}
+
+async function ieLoad(url, title, rssDescription, rssPubDate) {
+  if (ieAbort) ieAbort.abort();
+  ieAbort = new AbortController();
+  const sig = ieAbort.signal;
+
+  const addr   = document.getElementById('ie-addr');
+  const wtitle = document.getElementById('ie-wintitle');
+  const status = document.getElementById('ie-status');
+  const logo   = document.getElementById('ie-logo');
+  const reader = document.getElementById('ie-reader');
+  const loading= document.getElementById('ie-loading');
+  const blocked= document.getElementById('ie-blocked');
+
+  addr.value = url;
+  wtitle.textContent = (title||url).slice(0,70) + ' – Microsoft Internet Explorer';
+  logo.classList.remove('spin');
+  reader.style.display   = 'none';
+  blocked.style.display  = 'none';
+  loading.style.display  = 'none';
+  status.textContent     = 'Fertig';
+
+  if (ieHist[ieIdx]?.url !== url) {
+    ieHist = ieHist.slice(0, ieIdx + 1);
+    ieHist.push({ url, title: title||url });
+    ieIdx = ieHist.length - 1;
+  }
+  ieUpdateNav();
+
+  // Für den optionalen "Mit Claude lesen"-Button, unabhängig vom Ladepfad
+  _ieCurrentArticle = { url, title, description: rssDescription || '' };
+
+  // Volltext per Proxy-Kette laden — Claude ist rein optional (Button im Reader),
+  // kein automatischer API-Call mehr bei jedem Artikel-Klick.
+  logo.classList.add('spin');
+  loading.style.display  = 'flex';
+  reader.style.display   = 'none';
+  status.textContent     = 'Verbindung wird hergestellt...';
+
+  const enc = encodeURIComponent(url);
+  // Getestet 19.07.2026 — tote Domains entfernt (thingproxy, yacdn, cors.bridged.cc,
+  // crossorigin.me, fringe.zone, gobetween, speedycors, proxy.cml.fm, nextapi.fun,
+  // bypasscors, wind-proxy, cors-proxy.seita.nl, corsproxy.io [jetzt Key-pflichtig, 403])
+  // r.jina.ai ist NICHT hier drin — es ist der dedizierte Cloudflare-Fallback (tryJina)
+  // mit eigenem Markdown-Rendering. Hier nur die schnellen Roh-HTML-Proxies.
+  const htmlProxies = [
+    // direct — works when site sends ACAO: *
+    (s) => fetch(url, { signal: s }).then(okText),
+    (s) => fetch(`https://cors.sh/${url}`, { signal: s }).then(okText),
+    (s) => fetch(`https://cors.eu.org/${url}`, { signal: s }).then(okText),
+    (s) => fetch(`https://corsmirror.com/v1?url=${enc}`, { signal: s }).then(okText),
+    (s) => fetch(`https://cors-get-proxy.sirjosh.workers.dev/?url=${enc}`, { signal: s }).then(okText),
+    (s) => fetch(`https://alloworigin.com/get?url=${enc}`, { signal: s }).then(okJson).then(d => d.contents || ''),
+    (s) => fetch(`https://api.allorigins.win/get?url=${enc}`, { signal: s }).then(okJson).then(d => {
+      // allorigins liefert selbst 200, reicht aber den Zielstatus durch
+      if ((d.status?.http_code || 200) >= 400) throw new Error('Ziel: HTTP ' + d.status.http_code);
+      return d.contents || '';
+    }),
+    // instabil (zeitweise 522/Timeout), aber echte Dienste — Reserve
+    (s) => fetch(`https://api.allorigins.win/raw?url=${enc}`, { signal: s }).then(okText),
+    (s) => fetch(`https://api2.allorigins.win/get?url=${enc}`, { signal: s }).then(okJson).then(d => d.contents || ''),
+    (s) => fetch(`https://api.codetabs.com/v1/proxy?quest=${enc}`, { signal: s }).then(okText),
+  ];
+
+  status.textContent = `Lade… (${htmlProxies.length} Proxies parallel)`;
+
+  const html = await new Promise((resolve, reject) => {
+    if (sig.aborted) return reject(new DOMException('Aborted', 'AbortError'));
+    let done = false;
+    let remaining = htmlProxies.length;
+    htmlProxies.forEach(fn => {
+      // Eigener Controller pro Proxy: Timeout UND Abbruch durch neue Navigation
+      // müssen den fetch wirklich abbrechen, sonst endet das Race nie.
+      const ctrl = new AbortController();
+      const onOuterAbort = () => ctrl.abort();
+      sig.addEventListener('abort', onOuterAbort);
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      fn(ctrl.signal)
+        .then(text => {
+          if (!done && !sig.aborted && typeof text === 'string' && text.trim().length > 500
+              && !isBlockPage(text)) {
+            done = true;
+            resolve(text);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          clearTimeout(timer);
+          sig.removeEventListener('abort', onOuterAbort);
+          remaining--;
+          if (remaining === 0 && !done) {
+            reject(sig.aborted
+              ? new DOMException('Aborted', 'AbortError')
+              : new Error(`Alle ${htmlProxies.length} Proxies fehlgeschlagen`));
+          }
+        });
+    });
+  }).catch(e => {
+    if (e.name === 'AbortError') return null;
+    return '';
+  });
+  if (html === null) return;
+
+  // Fallback für "kein brauchbarer Inhalt": mit RSS-Beschreibung → Vorschau,
+  // ohne → Fehler-Banner. Wird auch nach der Extraktion genutzt (Blockseiten).
+  const showFallback = (detail) => {
+    loading.style.display = 'none';
+    logo.classList.remove('spin');
+    status.textContent = 'Fehler';
+
+    if (rssDescription) {
+      const dateStr = rssPubDate ? `<span style="margin-left:12px">📅 ${fmtDate(rssPubDate)}</span>` : '';
+      const domain = (() => { try { return new URL(url).hostname; } catch { return url; } })();
+      reader.innerHTML = `
+        <div class="ie-reader-src">📄 ${url}</div>
+        <h1>${title || '(kein Titel)'}</h1>
+        <div class="ie-reader-meta">Quelle: ${domain}${dateStr}</div>
+        <div class="rd-warnbox">
+          ⚠️ Volltext konnte nicht geladen werden (${detail}) — hier die RSS-Vorschau:
+        </div>
+        <div class="rd-teaser">
+          ${rssDescription}
+        </div>
+        <div class="rd-note">
+          <b>🤖 Stattdessen mit Claude lesen?</b><br>
+          <span style="color:var(--rd-muted);font-size:12px">Anthropic API Key eingeben — einmalig, wird in localStorage gespeichert.</span><br><br>
+          <button onclick="ieReadCurrentWithClaude()" style="padding:6px 16px;background:#00008b;color:#fff;border:none;cursor:pointer;font-family:'W95FA',monospace;font-size:13px">🤖 Mit Claude lesen</button>
+          <button onclick="window.open('${url.replace(/'/g,"\\'")}','_blank')" style="margin-left:8px;padding:6px 12px;background:#c0c0c0;border:2px outset #fff;cursor:pointer;font-family:'W95FA',monospace;font-size:12px">🌐 Im Browser öffnen</button>
+        </div>
+      `;
+      reader.style.display = 'block';
+      reader.scrollTop = 0;
+    } else {
+      blocked.style.display = 'flex';
+      document.getElementById('ie-err-detail').textContent = detail;
+    }
+  };
+
+  // Gemeinsamer Render-Schritt für beide Pfade (Proxy-Extraktion & Jina-Reader)
+  const renderArticle = (bodyHtml, pageTitle, via) => {
+    const host = (() => { try { return new URL(url).hostname; } catch { return url; } })();
+    reader.innerHTML = `
+      <div class="ie-reader-src">📄 ${url}</div>
+      <h1>${pageTitle || '(kein Titel)'}</h1>
+      <div class="ie-reader-meta">
+        Quelle: ${host}${via ? ` · ${via}` : ''}
+        ${rssDescription ? `<button onclick="ieReadCurrentWithClaude()" style="margin-left:10px;padding:2px 8px;background:#00008b;color:#fff;border:none;cursor:pointer;font-family:'W95FA',monospace;font-size:11px">🤖 Mit Claude zusammenfassen</button>` : ''}
+      </div>
+      ${bodyHtml}
+    `;
+    wtitle.textContent = (pageTitle || url).slice(0,70) + ' – Microsoft Internet Explorer';
+    loading.style.display = 'none';
+    reader.style.display  = 'block';
+    logo.classList.remove('spin');
+    status.textContent = 'Fertig';
+    reader.scrollTop = 0;
+  };
+
+  // Cloudflare-Bypass: r.jina.ai rendert einen echten Browser und liefert sauberes
+  // Markdown, das kein freier HTTP-Proxy je bekommt. Dedizierter Fallback, eigener
+  // Timeout (Browser-Render + Challenge-Solving kann dauern). Rückgabe:
+  //   true  = Navigation erledigt (Artikel gerendert ODER abgebrochen) → nichts mehr tun
+  //   false = Jina hat nichts Brauchbares → Aufrufer zeigt RSS-Fallback
+  const tryJina = async () => {
+    status.textContent = 'Reader-Modus (Cloudflare-Bypass)…';
+    const ctrl = new AbortController();
+    const onAbort = () => ctrl.abort();
+    sig.addEventListener('abort', onAbort);
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+    let md;
+    try {
+      md = await fetch('https://r.jina.ai/' + url, { signal: ctrl.signal }).then(okText);
+    } catch {
+      return sig.aborted; // abgebrochen → true (nichts tun); echter Fehler → false
+    } finally {
+      clearTimeout(timer);
+      sig.removeEventListener('abort', onAbort);
+    }
+    if (sig.aborted) return true;
+    if (!md || md.length < 200 || isBlockPage(md)) return false;
+    const parsed = parseJina(md);
+    if (!parsed || parsed.html.replace(/<[^>]+>/g, '').trim().length < 300) return false;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = parsed.html;
+    // absolute Bild-URLs + Selbstentfernung bei Ladefehler
+    tmp.querySelectorAll('img').forEach(img => {
+      try { img.src = new URL(img.getAttribute('src'), url).href; } catch { img.remove(); return; }
+      img.setAttribute('onerror', 'this.remove()');
+    });
+    renderArticle(tmp.innerHTML, parsed.title || title || url, 'via Reader (Cloudflare-Bypass)');
+    return true;
+  };
+
+  // ── Pfad 1: Roh-HTML aus dem Proxy-Race extrahieren ──────────────────────────
+  let extracted = false;
+  if (html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const pageTitle = doc.title || title || url;
+
+    // Remove clutter — zweistufig:
+    // Hart: strukturelle Elemente, immer weg (svg = Icons/Logos, blähen ohne width auf)
+    ['script','style','nav','header','footer','aside','iframe','svg','noscript','form']
+      .forEach(sel => {
+        try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch {}
+      });
+    // Weich: Klassen-Muster (Ads, Share, Related, …) — nie body/html entfernen und nie
+    // Elemente mit viel Text (sonst amputiert z.B. body.td-social-login-off den Artikel)
+    ['.sidebar','.ad','.advertisement','[class*="cookie"]','[class*="popup"]',
+     '[class*="modal"]','[class*="banner"]','[class*="advert"]','[id*="advert"]',
+     '[class*="sponsor"]','[class*="placement"]','[class*="promo"]','[class*="newsletter"]',
+     '[class*="subscribe"]','[class*="related"]','[class*="share"]','[class*="social"]',
+     '[class*="a-rec"]','[class*="breadcrumb"]','[class*="author-box"]',
+     'a[href*="play.google.com"]','a[href*="apps.apple.com"]','a[href*="itunes.apple.com"]'].forEach(sel => {
+      try {
+        doc.querySelectorAll(sel).forEach(el => {
+          if (el === doc.body || el === doc.documentElement) return;
+          if (el.textContent.trim().length > 1500) return;
+          el.remove();
+        });
+      } catch {}
+    });
+
+    // Find best content container — spezifische Artikel-Body-Selektoren zuerst,
+    // damit Related-Artikel, Footer und Promo-Module gar nicht erst mitkommen
+    const selectors = [
+      '[itemprop="articleBody"]', '.td-post-content',
+      '.article-body', '.article-content', '.post-content',
+      '.entry-content', '.content-body', '.story-body',
+      '#article-body', 'article', '[role="main"]', 'main',
+      '#content', '.article'
+    ];
+    let content = null;
+    for (const sel of selectors) {
+      const el = doc.querySelector(sel);
+      if (el && el.textContent.trim().length > 300) { content = el; break; }
+    }
+    if (!content) content = doc.body || doc.documentElement;
+
+    if (content) {
+      // Doppelten Titel raus — der Reader rendert die Überschrift selbst
+      const firstH1 = content.querySelector('h1');
+      if (firstH1) {
+        const a = firstH1.textContent.trim().toLowerCase();
+        const b = (pageTitle || '').trim().toLowerCase();
+        if (a && b && (b.includes(a) || a.includes(b.split(/\s[|–—-]\s/)[0].trim()))) firstH1.remove();
+      }
+
+      // Versteckt bleibt versteckt: per Inline-Style unsichtbare Elemente ganz entfernen,
+      // erst danach die restlichen Inline-Styles strippen (feste Breiten → Horizontal-Scroll)
+      content.querySelectorAll('[style]').forEach(el => {
+        if (/display\s*:\s*none|visibility\s*:\s*hidden/i.test(el.getAttribute('style'))) el.remove();
+        else el.removeAttribute('style');
+      });
+
+      // Bilder: Lazy-Load auflösen (data-src, nitro-lazy-src, …) — Platzhalter-SVGs
+      // im src blähen sich sonst zu riesigen Leerflächen auf; srcset/sources zeigen
+      // auf Platzhalter der Original-Domain → weg
+      content.querySelectorAll('picture source').forEach(s => s.remove());
+      content.querySelectorAll('img').forEach(img => {
+        let src = img.getAttribute('src') || '';
+        if (!src || src.startsWith('data:')) {
+          const attrs = [...img.attributes];
+          const lazySrc = attrs.find(a => a.name !== 'src' && /(^|-)src$/i.test(a.name) && a.value.trim());
+          const lazySet = attrs.find(a => /(^|-)srcset$/i.test(a.name) && a.value.trim());
+          if (lazySrc) src = lazySrc.value.trim();
+          else if (lazySet) src = lazySet.value.trim().split(/\s+/)[0];
+        }
+        if (!src || src.startsWith('data:')) { img.remove(); return; }
+        try { img.src = new URL(src, url).href; } catch { img.remove(); return; }
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+        img.setAttribute('onerror', 'this.remove()');
+      });
+
+      // Leere Container (Ad-Slots, Spacer, geleerte Wrapper) erzeugen große vertikale
+      // Lücken zwischen Textabschnitten → raus, wenn weder Text noch Bild/Video drin ist
+      content.querySelectorAll('p, div, section, figure, aside, ul, ol, table').forEach(el => {
+        if (!el.textContent.trim() && !el.querySelector('img, video')) el.remove();
+      });
+
+      // Relative Links auf IE-Navigation umbiegen (Klick via Delegation, s. Boot)
+      content.querySelectorAll('a[href]').forEach(a => {
+        try {
+          const abs = new URL(a.getAttribute('href'), url).href;
+          a.setAttribute('href', '#');
+          a.setAttribute('data-ie-url', abs);
+        } catch {}
+      });
+
+      // Genug Text übrig? Dann rendern. Sonst fällt es durch zu Jina.
+      if (content.textContent.trim().length >= 300) {
+        renderArticle(content.innerHTML, pageTitle, '');
+        extracted = true;
+      }
+    }
+  }
+
+  // ── Pfad 2: Jina-Reader (Cloudflare-Bypass), wenn Proxy-Pfad nichts lieferte ──
+  if (!extracted) {
+    if (await tryJina()) return;
+    showFallback(html
+      ? 'Seite durch Bot-Schutz blockiert — auch Reader-Modus kam nicht durch'
+      : `alle ${htmlProxies.length} Proxies + Reader fehlgeschlagen`);
+  }
+}
+
+function ieRetry() {
+  const url = document.getElementById('ie-addr').value;
+  if (url) ieLoad(url, url);
+}
+
+function ieNavigate(url) {
+  if (!url || url === 'about:blank') return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  ieLoad(url, url);
+}
+
+function ieBack() {
+  if (ieIdx > 0) { ieIdx--; const h = ieHist[ieIdx]; ieLoad(h.url, h.title); }
+}
+function ieFwd() {
+  if (ieIdx < ieHist.length-1) { ieIdx++; const h = ieHist[ieIdx]; ieLoad(h.url, h.title); }
+}
+function ieStop() {
+  if (ieAbort) ieAbort.abort();
+  document.getElementById('ie-logo').classList.remove('spin');
+  document.getElementById('ie-loading').style.display = 'none';
+  document.getElementById('ie-status').textContent = 'Gestoppt';
+}
+function ieRefresh() {
+  const url = document.getElementById('ie-addr').value;
+  if (url && url !== 'about:blank') {
+    if (ieIdx >= 0) ieHist[ieIdx] = { url, title: url }; // force reload
+    const idx = ieIdx; ieIdx = -1;
+    ieLoad(url, url);
+    ieIdx = idx;
+  }
+}
+function ieHome() {
+  if (ieAbort) ieAbort.abort();
+  document.getElementById('ie-reader').innerHTML = '';
+  document.getElementById('ie-reader').style.display = 'block';
+  document.getElementById('ie-loading').style.display = 'none';
+  document.getElementById('ie-blocked').style.display = 'none';
+  document.getElementById('ie-addr').value = 'about:blank';
+  document.getElementById('ie-wintitle').textContent = 'Microsoft Internet Explorer';
+  document.getElementById('ie-status').textContent = 'Bereit';
+  document.getElementById('ie-logo').classList.remove('spin');
+}
+function ieSearch() {
+  const q = prompt('Suchen:');
+  if (q) ieLoad('https://www.google.com/search?q=' + encodeURIComponent(q), 'Suche: ' + q);
+}
+function ieUpdateNav() {
+  document.getElementById('ie-back-btn').disabled = ieIdx <= 0;
+  document.getElementById('ie-fwd-btn').disabled  = ieIdx >= ieHist.length - 1;
+}
+
+// ═══════════════════════════════════════════════
+// BACKGROUND PREFETCH & AUTO-REFRESH (30 min)
+// ═══════════════════════════════════════════════
+const REFRESH_MS = 30 * 60 * 1000;
+let nextRefreshAt = 0;
+let cdTimer = null;
+
+async function prefetchWin(winId) {
+  const cat = CATS[winId];
+  if (!cat) return;
+  if (!feedCache[winId]) feedCache[winId] = {};
+
+  const allResults = [];
+  for (const [idx, f] of cat.feeds.entries()) {
+    try {
+      const items = await fetchFeed(f.url);
+      const tagged = items.map(item => ({ ...item, _src: f.id, _color: f.color }));
+      feedCache[winId][idx] = tagged;
+      tagged.forEach(i => allResults.push(i));
+    } catch (e) {
+      // keep old cache if available, otherwise mark as failed
+      if (feedCache[winId][idx] === undefined) feedCache[winId][idx] = [];
+    }
+  }
+  allResults.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  feedCache[winId][null] = allResults;
+
+  // if window is open and showing, re-render silently
+  const win = document.getElementById(winId);
+  if (win && !win.classList.contains('hidden')) {
+    const curIdx = activePill[winId] ?? null;
+    const feedEl = document.getElementById('feed-' + winId);
+    const statEl = document.getElementById('stat-' + winId);
+    const timeEl = document.getElementById('stat-time-' + winId);
+    const cached = feedCache[winId][curIdx] || [];
+    if (cached.length > 0) {
+      renderItems(feedEl, cached, cat, curIdx);
+      statEl.textContent = cached.length + ' Artikel';
+      timeEl.textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    }
+  }
+}
+
+async function prefetchAll() {
+  const cdEl = document.getElementById('refresh-countdown');
+  if (cdEl) cdEl.classList.add('loading');
+
+  // fetch all feed-windows in parallel
+  await Promise.all(Object.keys(CATS).map(id => prefetchWin(id)));
+
+  if (cdEl) cdEl.classList.remove('loading');
+}
+
+function startAutoRefresh() {
+  nextRefreshAt = Date.now() + REFRESH_MS;
+
+  // countdown tick every second
+  cdTimer = setInterval(() => {
+    const remaining = Math.max(0, nextRefreshAt - Date.now());
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('refresh-countdown');
+    if (el) el.textContent = `↺ ${m}:${s.toString().padStart(2, '0')}`;
+
+    if (remaining === 0) {
+      // clear all caches, trigger full prefetch
+      Object.keys(feedCache).forEach(id => { feedCache[id] = {}; });
+      wState && Object.keys(wState).forEach(id => { if (wState[id]) wState[id].loaded = false; });
+      nextRefreshAt = Date.now() + REFRESH_MS;
+      prefetchAll();
+    }
+  }, 1000);
+
+  // start background prefetch immediately on page load
+  prefetchAll();
+}
+
+// ═══════════════════════════════════════════════
+// READER-THEME (Everforest Hell/Dunkel)
+// ═══════════════════════════════════════════════
+function ieApplyTheme(mode) {
+  // ef-dark auf ie-body → Loading, Fehlerseite UND Reader erben die Farben
+  document.getElementById('ie-body').classList.toggle('ef-dark', mode === 'dark');
+  const ico = document.querySelector('#ie-theme-btn .ie-btn-ico');
+  if (ico) ico.textContent = mode === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('ie_theme', mode);
+}
+function ieToggleTheme() {
+  ieApplyTheme(document.getElementById('ie-body').classList.contains('ef-dark') ? 'light' : 'dark');
+}
+
+// ═══════════════════════════════════════════════
+// ANZEIGE-EIGENSCHAFTEN (Desktop-Farben)
+// ═══════════════════════════════════════════════
+const DISPLAY_ELEMS = {
+  bg: '--bg', win: '--win', barActive: '--bar-active',
+  barInactive: '--bar-inactive', taskbar: '--taskbar',
+};
+const DISPLAY_SCHEMES = {
+  standard: { bg:'#008080', win:'#c7c7c7', barActive:'#04007a', barInactive:'#808080', taskbar:'#c7c7c7' },
+  efdark:   { bg:'#232a2e', win:'#859289', barActive:'#475258', barInactive:'#343f44', taskbar:'#859289' },
+  eflight:  { bg:'#a7c080', win:'#f3ead3', barActive:'#8da101', barInactive:'#939f91', taskbar:'#f3ead3' },
+};
+let displayColors = { ...DISPLAY_SCHEMES.standard };
+let pendingColors = { ...displayColors };
+
+function applyDisplay(c) {
+  const st = document.documentElement.style;
+  Object.entries(DISPLAY_ELEMS).forEach(([k, cssVar]) => st.setProperty(cssVar, c[k]));
+}
+
+function loadDisplay() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('w95_display') || 'null');
+    if (saved) {
+      displayColors = { ...DISPLAY_SCHEMES.standard, ...saved };
+      applyDisplay(displayColors);
+    }
+  } catch {}
+}
+
+function openProps() {
+  pendingColors = { ...displayColors };
+  propSyncUi();
+  openWin('w-props');
+}
+
+function propSyncUi() {
+  const match = Object.entries(DISPLAY_SCHEMES).find(([, s]) =>
+    Object.keys(DISPLAY_ELEMS).every(k => s[k].toLowerCase() === pendingColors[k].toLowerCase()));
+  document.getElementById('prop-scheme').value = match ? match[0] : 'custom';
+  document.getElementById('prop-color').value = pendingColors[document.getElementById('prop-elem').value];
+  propPreview();
+}
+
+function propPreview() {
+  const c = pendingColors;
+  document.getElementById('pp-desk').style.background  = c.bg;
+  document.getElementById('pp-w1').style.background    = c.win;
+  document.getElementById('pp-w2').style.background    = c.win;
+  document.getElementById('pp-bar-i').style.background = c.barInactive;
+  document.getElementById('pp-bar-a').style.background = c.barActive;
+  document.getElementById('pp-task').style.background  = c.taskbar;
+}
+
+function propElemChanged() {
+  document.getElementById('prop-color').value = pendingColors[document.getElementById('prop-elem').value];
+}
+
+function propColorChanged(v) {
+  pendingColors[document.getElementById('prop-elem').value] = v;
+  propSyncUi();
+}
+
+function propSchemeChanged(name) {
+  if (!DISPLAY_SCHEMES[name]) return;
+  pendingColors = { ...DISPLAY_SCHEMES[name] };
+  propSyncUi();
+}
+
+function propApply() {
+  displayColors = { ...pendingColors };
+  applyDisplay(displayColors);
+  localStorage.setItem('w95_display', JSON.stringify(displayColors));
+}
+
+function propOk() { propApply(); closeWin('w-props'); }
+
+// Doppelklick auf freien Desktop → Eigenschaften (wie echtes W95)
+document.getElementById('desktop').addEventListener('dblclick', e => {
+  if (e.target.id === 'desktop') openProps();
+});
+
+// In-Artikel-Links (data-ie-url) öffnen im IE — via Delegation, da Property-onclick
+// die reader.innerHTML-Zuweisung nicht überlebt
+document.getElementById('ie-reader').addEventListener('click', e => {
+  const a = e.target.closest('a[data-ie-url]');
+  if (a) { e.preventDefault(); openInIE(a.getAttribute('data-ie-url'), a.textContent.trim()); }
+});
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+initAll();
+initFavoriten();
+loadDisplay();
+ieApplyTheme(localStorage.getItem('ie_theme') || 'light');
+// open first three windows tiled on load
+openWin('w-ki');
+openWin('w-sec');
+openWin('w-btc');
+startAutoRefresh();
+</script>
+</body>
+</html>

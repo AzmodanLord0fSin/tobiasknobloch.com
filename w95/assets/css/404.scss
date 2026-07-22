@@ -1,0 +1,63 @@
+@font-face {
+    font-family: 'W95FA';
+    src: url('../fonts/w95fa-regular-webfont.woff2') format('woff2'),
+    url('../fonts/w95fa-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+body    {
+    background: hsl(228, 84%, 39%);
+    font-family: 'W95FA', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 26px;
+    line-height: 1.5;
+}
+
+*   {
+    color: hsl(235, 14%, 73%);
+}
+
+.grid-page  {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    min-height: 94vh;
+    text-align: center;
+}
+
+.title-404  {
+    background: hsl(235, 14%, 69%);
+    color: hsl(243, 99%, 34%);
+    display: inline-block;
+    padding: 9px 20px 6px 18px;
+    text-transform: uppercase;
+    font-size: 30px;
+    line-height: 1;
+}
+
+#blinkCursor    {
+    animation: 1s blink ease-in-out infinite;
+    display: inline-block;
+    border-bottom: 3px solid hsl(235, 14%, 69%);
+    width: 20px;
+
+    @keyframes blink {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+}
+
+@media screen and (max-width: 800px) {
+    body	{
+        font-size: 20px;
+    }
+
+    .title-404  {
+        font-size: 20px;
+    }
+}
