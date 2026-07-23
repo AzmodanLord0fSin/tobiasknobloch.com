@@ -1,3 +1,16 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Persönliche Seite von Tobias Knobloch. Fünf selbstgebaute Programme: Serverüberwachung, eine Fahrradkarte mit Fog of War, ein CORS-Umweg ohne Backend, Vorlesungstranskription und ein Notfallplan für IT und Anlagen.">
+<meta name="color-scheme" content="dark light">
+<meta property="og:title" content="Tobias Knobloch">
+<meta property="og:description" content="Persönliche Seite von Tobias Knobloch. Fünf selbstgebaute Programme: Serverüberwachung, eine Fahrradkarte mit Fog of War, ein CORS-Umweg ohne Backend, Vorlesungstranskription und ein Notfallplan für IT und Anlagen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tobiasknobloch.com/">
+<link rel="canonical" href="https://tobiasknobloch.com/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#128296;</text></svg>">
 <title>Tobias Knobloch</title>
 
 <style>
@@ -474,7 +487,8 @@ a { color: inherit; }
   .torch-stage .lit { --ms: 320px; transition: none; }
 }
 </style>
-
+</head>
+<body>
 <header class="top">
   <span>TOBIAS KNOBLOCH</span>
   <nav>
@@ -488,10 +502,10 @@ a { color: inherit; }
 <section class="hero" id="hero">
   <div class="hero-fix">
     <div class="curtain" id="curtain">
-      <div class="ln">SACHEN</div>
-      <div class="ln dim">DIE ICH</div>
-      <div class="ln">GEBAUT</div>
-      <div class="ln dim">HABE</div>
+      <div class="ln dim">AN</div>
+      <div class="ln">AUDIENCE</div>
+      <div class="ln dim">OF</div>
+      <div class="ln">ONE</div>
     </div>
     <div class="reveal" id="reveal">
       <div class="who">TOBIAS KNOBLOCH · IT &amp; SICHERHEIT</div>
@@ -788,9 +802,11 @@ function choreo() {
   const q = Math.max(0, Math.min(1, (t - 0.45) / 0.4));
 
   lines.forEach((ln, i) => {
-    /* Innere Zeilen laufen weiter — der Vorhang reißt in der Mitte auf */
-    const spread = (i === 1 || i === 2) ? 118 : 82;
-    ln.style.transform = `translateX(${dirs[i] * p * spread}%)`;
+    /* Innere Zeilen laufen weiter — der Vorhang reißt in der Mitte auf.
+       Maß ist die Bildschirmbreite, nicht die Zeilenbreite: sonst bewegen
+       sich kurze Wörter wie AN und OF kaum, lange fliegen davon. */
+    const spread = (i === 1 || i === 2) ? 96 : 68;
+    ln.style.transform = `translateX(${dirs[i] * p * spread}vw)`;
     ln.style.opacity = String(1 - p * 0.85);
   });
   reveal.style.opacity = String(q);
@@ -979,3 +995,5 @@ if (!REDUCED) {
 }
 
 </script>
+</body>
+</html>
