@@ -488,14 +488,14 @@ a { color: inherit; }
 <section class="hero" id="hero">
   <div class="hero-fix">
     <div class="curtain" id="curtain">
-      <div class="ln">WERKZEUGE</div>
-      <div class="ln dim">FÜR EIN</div>
-      <div class="ln">PUBLIKUM</div>
-      <div class="ln dim">VON EINS</div>
+      <div class="ln">SACHEN</div>
+      <div class="ln dim">DIE ICH</div>
+      <div class="ln">GEBAUT</div>
+      <div class="ln dim">HABE</div>
     </div>
     <div class="reveal" id="reveal">
       <div class="who">TOBIAS KNOBLOCH · IT &amp; SICHERHEIT</div>
-      <p>Ich baue Sachen, weil mich etwas gestört hat. Meistens bin ich der einzige Nutzer.</p>
+      <p>Fängt meistens damit an, dass mich irgendwas nervt. Ein paar Wochenenden später läuft dann ein Programm dafür.</p>
     </div>
     <div class="hint" id="hint">SCROLLEN<em></em></div>
   </div>
@@ -507,12 +507,12 @@ a { color: inherit; }
     <div class="lead">MIT DER MAUS ÜBER DEN TEXT FAHREN</div>
     <div class="torch-stage" id="torch">
       <div class="torch-box" id="torchBox">
-        <p class="layer base">Das meiste hiervon hat nie jemand außer mir gebraucht. Das war auch nicht der Plan.</p>
-        <p class="layer lit" aria-hidden="true">Das meiste hiervon hat nie jemand außer mir gebraucht. Das war auch nicht der Plan.</p>
+        <p class="layer base">Gebraucht hat das alles außer mir noch niemand.</p>
+        <p class="layer lit" aria-hidden="true">Gebraucht hat das alles außer mir noch niemand.</p>
         <span class="torch-dot" id="torchDot"></span>
       </div>
     </div>
-    <div class="sig">FÜNF DAVON STEHEN UNTEN</div>
+    <div class="sig">TROTZDEM, HIER SIND SIE</div>
   </div>
 </section>
 
@@ -520,19 +520,17 @@ a { color: inherit; }
 <div class="wrap" id="hell">
   <section class="sec" id="zeug">
     <div class="sec-hd">
-      <h2>Zeug, das läuft</h2>
-      <span>05 STÜCK</span>
+      <h2>Fünf Sachen, die laufen</h2>
+      <span>STAND JULI 2026</span>
     </div>
 
     <!-- 01 -->
     <article class="proj tall">
       <div>
         <div class="proj-no">01 — WEB-ANWENDUNG</div>
-        <h3>Ein Blick genügt, um zu sehen ob alles noch läuft</h3>
-        <div class="prob">DAS PROBLEM</div>
-        <p>Auf meinem Server laufen mehrere Dienste rund um die Uhr. Fällt einer aus, merke ich das erst, wenn etwas fehlt — und um nachzusehen, müsste ich mich jedes Mal per SSH einloggen und Statusbefehle tippen.</p>
-        <div class="prob">WAS ICH GEBAUT HABE</div>
-        <p class="muted">Eine Weboberfläche, die systemd nach dem Zustand jedes Dienstes fragt, Logdateien auswertet und Laufzeiten anzeigt. Der entscheidende Teil ist nicht die Anzeige, sondern was <em>nicht</em> drinsteckt: die überwachten Prozesse wissen nichts von diesem Board. Kein Agent, keine Bibliothek, keine Schnittstelle auf ihrer Seite — sie schreiben ihre Dateien wie vorher, und das Board liest mit. Fällt es aus, laufen sie unbeeindruckt weiter.</p>
+        <h3>Was auf meinem Server läuft, und ob es noch läuft</h3>
+        <p>Auf dem Server laufen ein paar Dienste durch. Wenn einer abstürzt, merke ich das im Zweifel erst Tage später, weil irgendwo etwas fehlt. Vorher müsste ich mich einloggen und die Statusausgaben durchgehen, und das mache ich natürlich nicht jeden Morgen.</p>
+        <p class="muted">Jetzt gibt es eine Weboberfläche, die das für mich abfragt: Zustand, Laufzeit, die letzten Logzeilen. Wichtig war mir dabei, dass die Dienste selbst nichts davon mitbekommen. Kein Agent, den ich überall mitinstallieren muss. Sie schreiben ihre Logs und JSON-Dateien weiter wie vorher, das Board liest die nur aus. Wenn es abstürzt, läuft der Rest einfach weiter.</p>
         <div class="prob">AUFBAU</div>
         <dl class="spec">
           <dt>Prozess</dt><dd>Ein Flask-Dienst, selbst unter systemd, hinter Reverse-Proxy mit HTTPS</dd>
@@ -544,7 +542,7 @@ a { color: inherit; }
           <dt>Eigenkontrolle</dt><dd>Ein Cron-Job prüft alle 30 Minuten von außen, ob die Oberfläche noch antwortet</dd>
         </dl>
         <div class="tags"><span>PYTHON / FLASK</span><span>SYSTEMD</span><span>TOTP</span><span>PSUTIL</span><span>VPS</span></div>
-        <p class="note">Läuft privat hinter einem Login — kein öffentlicher Zugang, kein Repo.</p>
+        <p class="note">Läuft bei mir hinter einem Login. Nichts zum Angucken, deshalb hier nur beschrieben.</p>
       </div>
       <div class="proj-art">
         <div class="ops" id="ops">
@@ -585,7 +583,7 @@ a { color: inherit; }
             <span>liest, cacht 30 s,<br>zeigt an</span>
           </div>
         </div>
-        <p class="flow-note">Die Pfeile zeigen nur in eine Richtung. Nichts schreibt zurück.</p>
+        <p class="flow-note">Läuft nur in eine Richtung.</p>
       </div>
     </article>
 
@@ -593,13 +591,11 @@ a { color: inherit; }
     <article class="proj">
       <div>
         <div class="proj-no">02 — FLUTTER-APP</div>
-        <h3>Eine Fahrradkarte, die aufdeckt, wo ich schon war</h3>
-        <div class="prob">DAS PROBLEM</div>
-        <p>Ich bin seit Jahren in derselben Stadt unterwegs und immer dieselben Wege gefahren. Ich wollte sehen, wie viel davon ich eigentlich nie zu Gesicht bekommen habe.</p>
-        <div class="prob">WAS ICH GEBAUT HABE</div>
-        <p class="muted">Die Karte liegt unter Nebel. Wo ich mit dem Rad langfahre, reißt er dauerhaft auf — wie der Fog of War in Strategiespielen. Das Kartenmaterial kommt von OpenStreetMap, die markierbaren Orte holt die App live über die Overpass-Schnittstelle, statt sie fest einzubauen. Karlsruhe ist nur die Startkoordinate; mit einer anderen läuft sie in jeder Stadt.</p>
+        <h3>Fahrradkarte mit Nebel drüber</h3>
+        <p>Ich fahre in Karlsruhe seit Jahren im Grunde dieselben drei Strecken. Irgendwann wollte ich wissen, wie viel von der Stadt ich eigentlich noch nie gesehen habe.</p>
+        <p class="muted">Die App legt Nebel über die Karte. Wo ich langfahre, geht der weg und bleibt auch weg. Das Prinzip kennt man aus Strategiespielen. Karten kommen von OpenStreetMap, die Orte zum Freischalten zieht sie sich über Overpass, damit ich keine Liste pflegen muss. Karlsruhe steht nur als Startkoordinate im Code, mit einem anderen Wert läuft sie woanders genauso.</p>
         <div class="tags"><span>FLUTTER / DART</span><span>OPENSTREETMAP</span><span>OVERPASS-API</span><span>GPS IM HINTERGRUND</span></div>
-        <p class="note">Läuft auf dem Telefon, liegt nur lokal — kein öffentliches Repo.</p>
+        <p class="note">Liegt bisher nur auf meinem Rechner und dem Handy.</p>
       </div>
       <div class="proj-art">
         <figure class="shots">
@@ -620,12 +616,10 @@ a { color: inherit; }
       <div>
         <div class="proj-no">03 — CLAUDE SKILL + JS-MODUL</div>
         <h3>An CORS und Cloudflare vorbei, ohne Backend</h3>
-        <div class="prob">DAS PROBLEM</div>
-        <p>Ein Browser darf fremde Seiten nicht einfach lesen — CORS blockt. Und wo CORS nicht blockt, steht Cloudflare davor. Für eine reine HTML-Datei ohne Server ist das eigentlich das Ende.</p>
-        <div class="prob">WAS ICH GEBAUT HABE</div>
-        <p class="muted">Alle Proxys laufen gleichzeitig als Wettrennen statt nacheinander, der erste gültige Treffer gewinnt. Fehlerseiten und Cloudflare-Blockseiten werden erkannt und disqualifiziert, damit sie nicht gewinnen. Wenn alle scheitern, übernimmt ein echter Headless-Browser. Fiel beim Bauen des Windows-95-Dashboards ab.</p>
+        <p>Beim Windows-95-Dashboard bin ich dagegengelaufen: Eine HTML-Datei ohne eigenen Server darf fremde Seiten nicht auslesen, das unterbindet CORS. Und wo CORS mal nicht blockt, sitzt Cloudflare davor.</p>
+        <p class="muted">Die übliche Antwort sind öffentliche Proxys, nur sterben die ständig weg oder liefern eine Fehlerseite zurück, die auf den ersten Blick wie ein Treffer aussieht. Meine Variante schickt deshalb alle gleichzeitig los statt der Reihe nach und nimmt den ersten, der etwas Brauchbares zurückgibt. Blockseiten fliegen vorher raus, sonst gewinnt am Ende eine Cloudflare-Warteseite das Rennen. Kommt keiner durch, übernimmt ein Reader-Dienst, der einen echten Browser laufen lässt.</p>
         <div class="tags"><span>JAVASCRIPT</span><span>KEINE DEPENDENCIES</span><span>CLAUDE SKILL</span></div>
-        <p class="note">Das Repo ist noch privat — es geht online, sobald ich es aufgeräumt habe.</p>
+        <p class="note">Repo ist noch privat, ich muss da vorher aufräumen.</p>
       </div>
       <div class="proj-art">
         <div class="race" id="race">
@@ -644,15 +638,12 @@ a { color: inherit; }
     <article class="proj">
       <div>
         <div class="proj-no">04 — KOMMANDOZEILEN-WERKZEUG</div>
-        <h3>Vorlesungen schreiben sich selbst mit — samt Folien</h3>
-        <div class="prob">DAS PROBLEM</div>
-        <p>Aufgezeichnete Vorlesungen noch einmal anzusehen kostet dieselbe Zeit wie beim ersten Mal. Und eine reine Tonabschrift hilft wenig, wenn die Hälfte des Inhalts auf Folien steht, über die nur geredet wird.</p>
-        <div class="prob">WAS ICH GEBAUT HABE</div>
-        <p class="muted">Zwei Spuren aus einer Videodatei. Der Ton geht durch Whisper, das lokal auf dem Apple-Silicon-Chip läuft. Parallel schneidet ffmpeg Einzelbilder heraus, die ein Vision-Modell in echtes Markdown zurückübersetzt: aus einem Balkendiagramm wird ein Mermaid-Diagramm, aus einer Folientabelle eine Markdown-Tabelle, jede Zelle einzeln — nicht zusammengefasst. Beides landet zeitlich verwoben in einer Obsidian-Notiz: pro Zeitmarke steht, was auf der Folie stand und was dazu gesagt wurde.</p>
-        <div class="prob">DER TRICK</div>
-        <p class="muted">Eine Vorlesung besteht zu großen Teilen aus derselben Folie. Vor der Analyse vergleicht das Tool die Einzelbilder über ihre Graustufen — unveränderte werden nicht erneut geschickt, sondern erben das Ergebnis des letzten neuen Bildes. Aus mehreren hundert Einzelbildern werden so ein paar Dutzend Anfragen.</p>
+        <h3>Vorlesungsvideos zu Text, mitsamt den Folien</h3>
+        <p>Eine Aufzeichnung nochmal durchzugucken dauert genauso lang wie beim ersten Mal. Nur bringt eine reine Tonabschrift wenig, wenn der halbe Inhalt auf Folien steht, über die der Dozent bloß redet.</p>
+        <p class="muted">Das Skript macht deshalb zwei Sachen gleichzeitig. Der Ton läuft durch Whisper, lokal auf dem M-Chip. Parallel schneidet ffmpeg Standbilder raus, die ein Vision-Modell wieder in Markdown zurückschreibt: Aus einem Balkendiagramm wird ein Mermaid-Block, aus einer Folientabelle eine Markdown-Tabelle, Zelle für Zelle statt zusammengefasst. Am Ende steht beides zusammen in einer Obsidian-Notiz, pro Zeitmarke die Folie und was dazu gesagt wurde.</p>
+        <p class="muted">Der Teil, an dem ich am längsten gesessen habe: In einer Vorlesung ist minutenlang dieselbe Folie zu sehen. Die alle einzeln analysieren zu lassen wäre absurd teuer geworden. Also vergleicht das Skript die Standbilder vorher über ihre Graustufen und schickt nur die weg, auf denen sich wirklich etwas geändert hat.</p>
         <div class="tags"><span>PYTHON</span><span>MLX-WHISPER</span><span>FFMPEG</span><span>VISION-MODELL</span><span>MERMAID</span></div>
-        <p class="note">Der Ton bleibt auf dem Rechner. Die Folienbilder gehen zur Auswertung an eine Programmierschnittstelle — das ist der bewusste Tausch für die Diagramm-Erkennung. Das Repo ist noch privat.</p>
+        <p class="note">Der Ton bleibt auf dem Rechner. Die Folienbilder gehen zur Auswertung an eine Programmierschnittstelle — das nehme ich für die Diagramm-Erkennung in Kauf. Repo ist noch privat.</p>
         
       </div>
       <div class="proj-art">
@@ -695,11 +686,9 @@ xychart-beta
     <article class="proj">
       <div>
         <div class="proj-no">05 — PLAYBOOK</div>
-        <h3>Wenn Büro-IT und Anlagensteuerung dieselbe Störung haben</h3>
-        <div class="prob">DAS PROBLEM</div>
-        <p>In der Büro-IT zieht man im Zweifel den Stecker. An einer laufenden Anlage kann genau das der teurere Fehler sein. Die üblichen Notfallpläne kennen nur eine der beiden Welten.</p>
-        <div class="prob">WAS ICH GEBAUT HABE</div>
-        <p class="muted">Ein Ablaufplan, der beide Seiten zusammenbringt: welche Schritte in der IT gelten, welche in der Anlagensteuerung anders laufen, und an welchen Punkten sich beide abstimmen müssen, bevor jemand etwas abschaltet.</p>
+        <h3>Notfallplan für Büro-IT und Anlagen gleichzeitig</h3>
+        <p>In der Büro-IT nimmt man ein System im Zweifel vom Netz. An einer laufenden Anlage kann genau das teurer werden als der Vorfall selbst. Die Playbooks, die man so findet, kennen aber immer nur eine der beiden Seiten.</p>
+        <p class="muted">Also einen Ablauf geschrieben, der beide abdeckt: welche Schritte gleich bleiben, welche in der Anlagensteuerung anders laufen, und an welchen Stellen sich die zwei Seiten abstimmen müssen, bevor jemand einen Schalter umlegt.</p>
         <div class="tags"><span>INCIDENT RESPONSE</span><span>OT/ICS</span><span>ÖFFENTLICH</span></div>
         <a class="go" href="https://github.com/AzmodanLord0fSin/it-ot-incident-response-playbook" target="_blank" rel="noopener"><em>→</em> Auf GitHub ansehen</a>
       </div>
@@ -719,8 +708,8 @@ xychart-beta
   <section class="next" id="nebenan">
     <div>
       <h3>Nebenan läuft noch Windows&nbsp;95.</h3>
-      <p>Mein Nachrichten-Dashboard. Siebzehn RSS-Quellen in Fenstern, die sich ziehen, vergrößern und in die Taskleiste legen lassen, dazu ein Lesemodus, der Artikel aus fremden Seiten herausschält. Alles in einer einzigen HTML-Datei — kein Build, kein npm, kein Server. Doppelklick genügt.</p>
-      <p class="small">Keine Kachel, keine Vorschau: das ist die echte Seite. Am besten an einem großen Bildschirm.</p>
+      <p>Mein Nachrichten-Dashboard: siebzehn Feeds in Fenstern, die man ziehen, vergrößern und in die Taskleiste legen kann. Dazu ein Lesemodus, der Artikel aus fremden Seiten rausholt. Das Ganze steckt in einer einzigen HTML-Datei, die man auch einfach doppelklicken kann.</p>
+      <p class="small">Das rechts ist kein Screenshot, die Seite läuft wirklich. Auf dem Handy allerdings eher mäßig.</p>
       <a class="go" href="/w95/">Zum Desktop <em>→</em></a>
     </div>
     <div class="proj-art">
@@ -745,7 +734,7 @@ xychart-beta
       <a href="mailto:PLATZHALTER@tobiasknobloch.com">E-MAIL</a>
       <a href="/w95/">WINDOWS 95</a>
     </div>
-    <span>GEBAUT, WEIL MICH ETWAS GESTÖRT HAT</span>
+    <span>KARLSRUHE</span>
   </footer>
 </div>
 
