@@ -486,6 +486,27 @@ a { color: inherit; }
   * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
   .torch-stage .lit { --ms: 320px; transition: none; }
 }
+
+/* Projekt 06 — Sanierungs-Karte */
+.golinks { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 26px; }
+.golinks + .note { margin-top: 4px; }
+.fix { border: 1px solid var(--rule); }
+.fix-hd, .fix-foot {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  color: var(--ink-2); padding: 12px 15px;
+}
+.fix-hd  { border-bottom: 1px solid var(--rule); }
+.fix-foot { border-top: 1px solid var(--rule); }
+.fix-foot b { color: var(--acc); font-weight: 600; }
+.fix-row {
+  padding: 13px 15px; border-top: 1px solid var(--rule);
+  font-size: 13px; line-height: 1.5; display: grid; gap: 4px;
+}
+.fix-row:first-of-type { border-top: none; }
+.fix-row s { color: var(--ink-2); text-decoration-thickness: 1px; }
+.fix-row b { font-weight: 600; }
+.fix-row b::before { content: "→ "; color: var(--acc); }
 </style>
 </head>
 <body>
@@ -521,12 +542,11 @@ a { color: inherit; }
     <div class="lead">MIT DER MAUS ÜBER DEN TEXT FAHREN</div>
     <div class="torch-stage" id="torch">
       <div class="torch-box" id="torchBox">
-        <p class="layer base">Gebraucht hat das alles außer mir noch niemand.</p>
-        <p class="layer lit" aria-hidden="true">Gebraucht hat das alles außer mir noch niemand.</p>
+        <p class="layer base">Steht nur da, damit der Effekt was zum Aufdecken hat.</p>
+        <p class="layer lit" aria-hidden="true">Steht nur da, damit der Effekt was zum Aufdecken hat.</p>
         <span class="torch-dot" id="torchDot"></span>
       </div>
     </div>
-    <div class="sig">TROTZDEM, HIER SIND SIE</div>
   </div>
 </section>
 
@@ -714,6 +734,32 @@ xychart-beta
           <div class="phase ot"><span class="dot"></span><span class="tx"><b>BESEITIGEN</b><span>Patchen im laufenden Betrieb ist an der Anlage oft nicht möglich</span></span><span class="side">ABSTIMMUNG</span></div>
           <div class="phase it"><span class="dot"></span><span class="tx"><b>WIEDERANLAUF</b><span>Stufenweise, mit Prüfpunkten auf beiden Seiten</span></span><span class="side">GLEICH</span></div>
           <div class="phase it"><span class="dot"></span><span class="tx"><b>NACHBEREITEN</b><span>Was hat gefehlt, was kommt ins Playbook</span></span><span class="side">GLEICH</span></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 06 -->
+    <article class="proj">
+      <div>
+        <div class="proj-no">06 — POWERSHELL-WERKZEUGE</div>
+        <h3>Meinen eigenen Code von 2016 bis 2022 nochmal richtig gemacht</h3>
+        <p>Das Älteste auf meinem GitHub sind PowerShell-Skripte aus meiner Zeit im OT-Security-Support: Endpoints härten, Asset-Inventar erheben. Damals zählte nur, dass sie taten, was sie sollten — nicht, dass sie schön aussahen. Sauber liefen sie nie: tote Funktionsaufrufe, alles in einer einzigen Datei, kein einziger Test.</p>
+        <p class="muted">Statt sie zu verstecken, habe ich mich nochmal drangesetzt. Das größte war eine Klick-Oberfläche für den Helpdesk — 414 Zeilen in einer einzigen Datei. Die habe ich so weit auseinandergezogen, bis die eigentliche Arbeit vom Fenster-Drumherum getrennt war und ich sie endlich testen konnte. Bei den kleineren Skripten kamen beim genauen Hinschauen echte Fehler raus: eine Abfrage, die immer „ja" sagte, ein Feld, das leer blieb, weil ich damals die falsche Stelle ausgelesen hatte.</p>
+        <div class="tags"><span>POWERSHELL</span><span>PESTER</span><span>GITHUB ACTIONS</span><span>PSSCRIPTANALYZER</span><span>CIM</span></div>
+        <div class="golinks">
+          <a class="go" href="https://github.com/AzmodanLord0fSin/All-in-One" target="_blank" rel="noopener"><em>→</em> All-in-One</a>
+          <a class="go" href="https://github.com/AzmodanLord0fSin/Collect-Asset-Info" target="_blank" rel="noopener"><em>→</em> Collect-Asset-Info</a>
+        </div>
+        <p class="note">Alte Helpdesk-Werkzeuge, keine Produkte. Der Punkt ist nicht, was sie tun, sondern dass ich sie nicht so liegen lassen wollte.</p>
+      </div>
+      <div class="proj-art">
+        <div class="fix">
+          <div class="fix-hd"><span>EIGENER CODE, ÜBERARBEITET</span><span>2016–2022 → 2026</span></div>
+          <div class="fix-row"><s>Aufruf einer Funktion, die es nie gab</s><b>Bug gefunden, entfernt</b></div>
+          <div class="fix-row"><s>Eine Bedingung, die immer wahr war</s><b>zweiter echter Bug behoben</b></div>
+          <div class="fix-row"><s>Eine 414-Zeilen-Datei, kein Test</s><b>Logik in Modulen, 26 Tests</b></div>
+          <div class="fix-row"><s>Lief nur auf altem Windows</s><b>CI gegen PowerShell 5.1 &amp; 7</b></div>
+          <div class="fix-foot"><span>PSScriptAnalyzer</span><b>0 Befunde</b></div>
         </div>
       </div>
     </article>
